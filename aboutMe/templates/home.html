@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block content %}
+
+<header class="topbar">
+  <div class="container topbar-inner">
+    <div class="brand">John</div>
+
+    <nav class="nav">
+      <a href="#about">About</a>
+      <a href="#skills">Skills</a>
+      <a href="#projects">Projects</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <button class="menu-btn" type="button">Menu</button>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="section hero">
+    <div class="container grid-2">
+      <div class="hero-left">
+        <p class="muted">Hi, I am</p>
+        <h1 class="hero-title">John<br/>Doe</h1>
+        <p class="hero-sub">Full-Stack Developer</p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#" target="_blank" rel="noopener">Resume</a>
+          <a class="btn btn-ghost" href="#contact">Hire Me</a>
+        </div>
+
+        <div class="social">
+          <a class="icon-btn" href="#" aria-label="GitHub">GH</a>
+          <a class="icon-btn" href="#" aria-label="LinkedIn">in</a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="glass">
+          <div id="hero-3d" class="three-box"></div>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-indicator">⌄</div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="section about theme-purple">
+    <div class="container grid-2">
+      <div>
+        <h2 class="section-title">About Me</h2>
+        <p class="lead">
+          I build clean web apps with Django and modern front-end tools, and I love
+          interactive 3D experiences with Three.js.
+        </p>
+
+        <div class="chips">
+          <span class="chip">Django</span>
+          <span class="chip">Three.js</span>
+          <span class="chip">REST APIs</span>
+          <span class="chip">PostgreSQL</span>
+        </div>
+
+        <div class="about-card">
+          <h3>Quick summary</h3>
+          <ul>
+            <li>Backend: Python, Django</li>
+            <li>Frontend: HTML, CSS, JS</li>
+            <li>3D: Three.js scenes + animations</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <div class="glass big-glass">
+          <div id="about-3d" class="three-box"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills" class="section skills">
+    <div class="container grid-2">
+      <div>
+        <h2 class="section-title">Skills</h2>
+        <p class="muted">Drag to rotate. Hover for highlight.</p>
+
+        <div class="skills-list">
+          <div class="skill-row"><span>Python</span><span>●●●●●</span></div>
+          <div class="skill-row"><span>Django</span><span>●●●●○</span></div>
+          <div class="skill-row"><span>JavaScript</span><span>●●●●○</span></div>
+          <div class="skill-row"><span>Three.js</span><span>●●●○○</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="glass">
+          <div id="skills-3d" class="three-box"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects" class="section projects">
+    <div class="container">
+      <h2 class="section-title center">Projects</h2>
+
+      <div class="projects-grid">
+        <article class="project-card">
+          <div class="project-thumb"></div>
+          <h3>3D Portfolio</h3>
+          <p>Interactive portfolio with Three.js + Django.</p>
+          <div class="tags">
+            <span class="tag">Django</span><span class="tag">Three.js</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-thumb"></div>
+          <h3>Job Tracker</h3>
+          <p>CRUD app, auth, dashboards.</p>
+          <div class="tags">
+            <span class="tag">Python</span><span class="tag">Postgres</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-thumb"></div>
+          <h3>API Service</h3>
+          <p>REST API with clean architecture.</p>
+          <div class="tags">
+            <span class="tag">DRF</span><span class="tag">JWT</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="section contact">
+    <div class="container grid-2">
+      <div class="glass contact-form">
+        <h2 class="section-title">Contact Form</h2>
+        <p class="muted">Drop your info and I’ll get back to you.</p>
+
+        <form method="post" action="{% url 'contact' %}">
+          {% csrf_token %}
+
+          <div class="form-grid">
+            <div>
+              <label>Full name</label>
+              <input name="name" placeholder="Your Name" required />
+            </div>
+            <div>
+              <label>Email Address</label>
+              <input name="email" type="email" placeholder="you@example.com" required />
+            </div>
+          </div>
+
+          <label>Your Message</label>
+          <textarea name="message" rows="5" placeholder="Tell me about your project..." required></textarea>
+
+          <button class="btn btn-primary full" type="submit">Send Message →</button>
+
+          <p class="tiny muted">I’ll never share your data with anyone else.</p>
+        </form>
+      </div>
+
+      <div class="glass">
+        <div id="contact-3d" class="three-box"></div>
+      </div>
+    </div>
+
+    <footer class="footer container">
+      <span class="muted">© 2025 John. All rights reserved.</span>
+      <div class="footer-links">
+        <a href="#">GitHub</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </footer>
+  </section>
+  <div id="projects-modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-title">Projects</h3>
+        <button id="modal-close" class="xbtn">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+ </div>
+
+</main>
+
+{% endblock %}
