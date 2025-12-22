@@ -3,7 +3,7 @@
 
 <header class="topbar">
   <div class="container topbar-inner">
-    <div class="brand">John</div>
+    <div class="brand">Joni Kalayu</div>
 
     <nav class="nav">
       <a href="#about">About</a>
@@ -17,13 +17,14 @@
 </header>
 
 <main>
+
   <!-- HERO -->
   <section class="section hero">
     <div class="container grid-2">
       <div class="hero-left">
         <p class="muted">Hi, I am</p>
-        <h1 class="hero-title">John<br/>Doe</h1>
-        <p class="hero-sub">Full-Stack Developer</p>
+        <h1 class="hero-title">Joni<br/>Kalayu</h1>
+        <p class="hero-sub">DevOps & Cloud Engineering</p>
 
         <div class="hero-actions">
           <a class="btn btn-primary" href="#" target="_blank" rel="noopener">Resume</a>
@@ -36,9 +37,12 @@
         </div>
       </div>
 
+      <!-- right side “glass” like your reference -->
       <div class="hero-right">
-        <div class="glass">
-          <div id="hero-3d" class="three-box"></div>
+        <div class="glass big-glass">
+          <div class="three-box hero-placeholder">
+            <div class="muted" style="padding:18px">3D content appears in Skills / Projects / Contact sections.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -51,30 +55,29 @@
       <div>
         <h2 class="section-title">About Me</h2>
         <p class="lead">
-          I build clean web apps with Django and modern front-end tools, and I love
-          interactive 3D experiences with Three.js.
+          I’m a Junior DevOps & Cloud Engineer with hands-on experience in AWS, Terraform, Docker, Kubernetes, and CI/CD automation...
         </p>
 
         <div class="chips">
-          <span class="chip">Django</span>
-          <span class="chip">Three.js</span>
-          <span class="chip">REST APIs</span>
-          <span class="chip">PostgreSQL</span>
+          <span class="chip">AWS</span>
+          <span class="chip">Terraform</span>
+          <span class="chip">Kubernetes</span>
+          <span class="chip">CI/CD</span>
         </div>
 
         <div class="about-card">
           <h3>Quick summary</h3>
           <ul>
-            <li>Backend: Python, Django</li>
-            <li>Frontend: HTML, CSS, JS</li>
-            <li>3D: Three.js scenes + animations</li>
+            <li>Cloud: AWS, Azure</li>
+            <li>DevOps: CI/CD, IaC</li>
+            <li>Monitoring: Grafana, Prometheus</li>
           </ul>
         </div>
       </div>
 
       <div>
         <div class="glass big-glass">
-          <div id="about-3d" class="three-box"></div>
+          <div class="three-box about-placeholder"></div>
         </div>
       </div>
     </div>
@@ -85,18 +88,34 @@
     <div class="container grid-2">
       <div>
         <h2 class="section-title">Skills</h2>
-        <p class="muted">Drag to rotate. Hover for highlight.</p>
+        <p class="muted">Hover a tool to see details. Click to view projects.</p>
 
+        <!-- sidebar like the reference video -->
+        <div id="tool-sidebar" class="tool-sidebar">
+          <div class="tool-sidebar-head">
+            <div id="tool-name" class="tool-name">HOVER A TOOL</div>
+            <div id="tool-category" class="tool-category muted"></div>
+          </div>
+          <div id="tool-desc" class="tool-desc muted">
+            Move your mouse over a tool icon on the right.
+          </div>
+          <div id="tool-tags" class="tool-tags"></div>
+        </div>
+
+        <!-- optional list -->
         <div class="skills-list">
           <div class="skill-row"><span>Python</span><span>●●●●●</span></div>
-          <div class="skill-row"><span>Django</span><span>●●●●○</span></div>
-          <div class="skill-row"><span>JavaScript</span><span>●●●●○</span></div>
-          <div class="skill-row"><span>Three.js</span><span>●●●○○</span></div>
+          <div class="skill-row"><span>Bash</span><span>●●●●○</span></div>
+          <div class="skill-row"><span>Jenkins</span><span>●●●●○</span></div>
+          <div class="skill-row"><span>Ansible</span><span>●●●○○</span></div>
+          <div class="skill-row"><span>Terraform</span><span>●●●●○</span></div>
+          <div class="skill-row"><span>Kubernetes</span><span>●●●●○</span></div>
         </div>
       </div>
 
       <div>
         <div class="glass">
+          <!-- THIS is the Skills “window” -->
           <div id="skills-3d" class="three-box"></div>
         </div>
       </div>
@@ -108,33 +127,32 @@
     <div class="container">
       <h2 class="section-title center">Projects</h2>
 
-      <div class="projects-grid">
-        <article class="project-card">
-          <div class="project-thumb"></div>
-          <h3>3D Portfolio</h3>
-          <p>Interactive portfolio with Three.js + Django.</p>
-          <div class="tags">
-            <span class="tag">Django</span><span class="tag">Three.js</span>
-          </div>
-        </article>
+      <!-- background 3d window behind cards (matches reference) -->
+      <div class="projects-3d-wrap">
+        <div id="projects-3d" class="projects-3d"></div>
 
-        <article class="project-card">
-          <div class="project-thumb"></div>
-          <h3>Job Tracker</h3>
-          <p>CRUD app, auth, dashboards.</p>
-          <div class="tags">
-            <span class="tag">Python</span><span class="tag">Postgres</span>
-          </div>
-        </article>
+        <div class="projects-grid">
+          <article class="project-card">
+            <div class="project-thumb"></div>
+            <h3>3D Portfolio</h3>
+            <p>Interactive portfolio with Three.js + Django.</p>
+            <div class="tags"><span class="tag">Django</span><span class="tag">Three.js</span></div>
+          </article>
 
-        <article class="project-card">
-          <div class="project-thumb"></div>
-          <h3>API Service</h3>
-          <p>REST API with clean architecture.</p>
-          <div class="tags">
-            <span class="tag">DRF</span><span class="tag">JWT</span>
-          </div>
-        </article>
+          <article class="project-card">
+            <div class="project-thumb"></div>
+            <h3>Job Tracker</h3>
+            <p>CRUD app, auth, dashboards.</p>
+            <div class="tags"><span class="tag">Python</span><span class="tag">Postgres</span></div>
+          </article>
+
+          <article class="project-card">
+            <div class="project-thumb"></div>
+            <h3>API Service</h3>
+            <p>REST API with clean architecture.</p>
+            <div class="tags"><span class="tag">DRF</span><span class="tag">JWT</span></div>
+          </article>
+        </div>
       </div>
     </div>
   </section>
@@ -170,6 +188,7 @@
       </div>
 
       <div class="glass">
+        <!-- THIS is the Contact “window” -->
         <div id="contact-3d" class="three-box"></div>
       </div>
     </div>
@@ -182,6 +201,8 @@
       </div>
     </footer>
   </section>
+
+  <!-- Modal -->
   <div id="projects-modal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -190,7 +211,7 @@
       </div>
       <div id="modal-body" class="modal-body"></div>
     </div>
- </div>
+  </div>
 
 </main>
 
