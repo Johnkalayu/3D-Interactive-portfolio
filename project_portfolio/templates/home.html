@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Portfolio - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section id="hero" class="section hero-section">
+    <div class="container">
+        <h1 class="hero-title">Hi, I'm <span class="highlight">Joni Kalayu</span></h1>
+        <p class="hero-subtitle"> Cloud Architect | DevOps Engineer</p>
+        <div class="hero-buttons">
+            <a href="https://github.com/Johnkalayu/3D-Interactive-portfolio/" class="btn btn-primary">github</a>
+            <a href="#contact" class="btn btn-secondary">Contact Me</a>
+            <a href="https://www.linkedin.com/in/joni-kalayu/" class="btn btn-secondary">Linkedin</a>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="section about-section">
+    <div class="container">
+        <h2 class="section-title">About Me</h2>
+        <div class="about-content">
+            <p>I'm a passionate developer with expertise in building scalable web applications and cloud infrastructure. With years of experience in full-stack development, I specialize in creating elegant solutions to complex problems.</p>
+            <p>My journey in technology has led me to master various tools and frameworks, from frontend technologies like React and Vue.js to backend systems with Django and Node.js, and cloud platforms including AWS and Azure.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Skills Section -->
+<section id="skills" class="section skills-section">
+    <div class="container">
+        <h2 class="section-title">Skills & Technologies</h2>
+        <p class="section-description">Interact with the 3D orbiting icons - hover to learn more, click to see related projects</p>
+    </div>
+</section>
+
+<!-- Projects Section -->
+<section id="projects" class="section projects-section">
+    <div class="container">
+        <h2 class="section-title">Featured Projects</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <h3>E-Commerce Platform</h3>
+                <p>A full-stack e-commerce solution with payment integration, inventory management, and real-time analytics.</p>
+                <div class="project-tags">
+                    <span class="tag">Django</span>
+                    <span class="tag">React</span>
+                    <span class="tag">PostgreSQL</span>
+                </div>
+                <a href="#" class="project-link">View Project →</a>
+            </div>
+            
+            <div class="project-card">
+                <h3>Cloud Infrastructure Automation</h3>
+                <p>Terraform-based infrastructure as code for multi-cloud deployment with CI/CD pipelines.</p>
+                <div class="project-tags">
+                    <span class="tag">AWS</span>
+                    <span class="tag">Terraform</span>
+                    <span class="tag">Docker</span>
+                </div>
+                <a href="#" class="project-link">View Project →</a>
+            </div>
+            
+            <div class="project-card">
+                <h3>Real-Time Analytics Dashboard</h3>
+                <p>Interactive dashboard for monitoring and visualizing business metrics in real-time.</p>
+                <div class="project-tags">
+                    <span class="tag">Python</span>
+                    <span class="tag">D3.js</span>
+                    <span class="tag">Redis</span>
+                </div>
+                <a href="#" class="project-link">View Project →</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="section contact-section">
+    <div class="container">
+        <h2 class="section-title">Get In Touch</h2>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" class="contact-form">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.name }}
+            </div>
+            <div class="form-group">
+                {{ form.email }}
+            </div>
+            <div class="form-group">
+                {{ form.message }}
+            </div>
+            <button type="submit" class="btn btn-primary">Send Message</button>
+        </form>
+    </div>
+</section>
+
+<script>
+    // Inject tools data for global_scene.js
+    window.TOOLS_DATA = [
+        {% for tool in tools %}
+        {
+            name: "{{ tool.name }}",
+            category: "{{ tool.category }}",
+            description: "{{ tool.description|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+</script>
+{% endblock %}
