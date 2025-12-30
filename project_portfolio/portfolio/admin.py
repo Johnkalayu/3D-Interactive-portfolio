@@ -1,22 +1,46 @@
-from django.contrib import admin
-from .models import Tool, Project, Contact
+"""
+Portfolio admin configuration
+"""
 
-@admin.register(Tool)
-class ToolAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'icon_path']
-    list_filter = ['category']
-    search_fields = ['name', 'description']
+from django.contrib import admin
+from .models import Skill, Project, ContactMessage, SiteSettings
+
+
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'order')
+    list_filter = ('category',)
+    search_fields = ('name',)
+    ordering = ('order', 'name')
+
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['title', 'link', 'created_at']
-    list_filter = ['created_at', 'tools']
-    search_fields = ['title', 'description']
-    filter_horizontal = ['tools']
+    list_display = ('title', 'category', 'is_featured', 'order', 'created_at')
+    list_filter = ('category', 'is_featured')
+    search_fields = ('title', 'description')
+    ordering = ('order', '-created_at')
 
-@admin.register(Contact)
-class ContactAdmin(admin.ModelAdmin):
-    list_display = ['name', 'email', 'submitted_at']
-    list_filter = ['submitted_at']
-    search_fields = ['name', 'email', 'message']
-    readonly_fields = ['submitted_at']
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('full_name', 'email', 'created_at', 'read')
+    list_filter = ('read', 'created_at')
+    search_fields = ('full_name', 'email', 'message')
+    readonly_fields = ('full_name', 'email', 'message', 'created_at')
+    ordering = ('-created_at',)
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ('author_name', 'author_email')
+
+    def has_add_permission(self, request):
+        # Only allow one instance
+        return not SiteSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False

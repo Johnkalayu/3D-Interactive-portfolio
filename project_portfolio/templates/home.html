@@ -1,121 +1,277 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Portfolio - Home{% endblock %}
-
 {% block content %}
 <!-- Hero Section -->
-<section id="hero" class="section hero-section">
-    <div class="container">
-        <h1 class="hero-title">Hi, I'm <span class="highlight">Joni Kalayu</span></h1>
-        <p class="hero-subtitle"> Cloud Architect | DevOps Engineer</p>
-        <div class="hero-buttons">
-            <a href="https://github.com/Johnkalayu/3D-Interactive-portfolio/" class="btn btn-primary">github</a>
-            <a href="#contact" class="btn btn-secondary">Contact Me</a>
-            <a href="https://www.linkedin.com/in/joni-kalayu/" class="btn btn-secondary">Linkedin</a>
+<section id="hero" class="hero-section">
+    <div class="hero-content">
+        <div class="hero-text">
+            <p class="hero-greeting animate-fade-in">Hi, I am</p>
+            <h1 class="hero-name animate-blur-in">
+                <span class="name-first">Joni</span>
+                <span class="name-last">Kalayu</span>
+            </h1>
+            <p class="hero-title animate-fade-in-delay">DevOps & Clod Engineering</p>
+
+            <div class="hero-buttons">
+                <a href="#" class="btn btn-primary" target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Resume
+                </a>
+                <div class="hero-secondary-buttons">
+                    <a href="#contact" class="btn btn-outline">Hire Me</a>
+                    <a href="{{ social.github }}" target="_blank" class="btn btn-icon" aria-label="GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                    <a href="{{ social.linkedin }}" target="_blank" class="btn btn-icon" aria-label="LinkedIn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-</section>
 
-<!-- About Section -->
-<section id="about" class="section about-section">
-    <div class="container">
-        <h2 class="section-title">About Me</h2>
-        <div class="about-content">
-            <p>I'm a passionate developer with expertise in building scalable web applications and cloud infrastructure. With years of experience in full-stack development, I specialize in creating elegant solutions to complex problems.</p>
-            <p>My journey in technology has led me to master various tools and frameworks, from frontend technologies like React and Vue.js to backend systems with Django and Node.js, and cloud platforms including AWS and Azure.</p>
-        </div>
+    <div class="scroll-indicator">
+        <div class="scroll-arrow"></div>
     </div>
 </section>
 
 <!-- Skills Section -->
-<section id="skills" class="section skills-section">
-    <div class="container">
-        <h2 class="section-title">Skills & Technologies</h2>
-        <p class="section-description">Interact with the 3D orbiting icons - hover to learn more, click to see related projects</p>
+<section id="skills" class="skills-section">
+    <div class="skills-header-left">
+        <h2 class="skills-title">SKILLS</h2>
+        <p class="skills-subtitle">Hover over the tools to learn more</p>
     </div>
+    <!-- 3D Animation displays here -->
 </section>
 
 <!-- Projects Section -->
-<section id="projects" class="section projects-section">
-    <div class="container">
-        <h2 class="section-title">Featured Projects</h2>
-        <div class="projects-grid">
-            <div class="project-card">
-                <h3>E-Commerce Platform</h3>
-                <p>A full-stack e-commerce solution with payment integration, inventory management, and real-time analytics.</p>
-                <div class="project-tags">
-                    <span class="tag">Django</span>
-                    <span class="tag">React</span>
-                    <span class="tag">PostgreSQL</span>
+<section id="projects" class="projects-section">
+    <div class="section-header">
+        <a href="#projects">
+            <h2 class="section-title">Projects</h2>
+        </a>
+    </div>
+
+    <div class="projects-grid">
+        {% for project in projects %}
+        <div class="project-card" data-project-id="{{ project.id }}">
+            <div class="project-image">
+                {% if project.image %}
+                <img src="{{ project.image }}" alt="{{ project.title }}" loading="lazy">
+                {% else %}
+                <div class="project-placeholder">
+                    <span>{{ project.title|slice:":2" }}</span>
                 </div>
-                <a href="#" class="project-link">View Project →</a>
+                {% endif %}
+                <div class="project-overlay">
+                    <div class="project-info">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        <span class="project-category">{{ project.category }}</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="project-card">
-                <h3>Cloud Infrastructure Automation</h3>
-                <p>Terraform-based infrastructure as code for multi-cloud deployment with CI/CD pipelines.</p>
-                <div class="project-tags">
-                    <span class="tag">AWS</span>
-                    <span class="tag">Terraform</span>
-                    <span class="tag">Docker</span>
+
+            <div class="project-details">
+                <p class="project-description">{{ project.description }}</p>
+
+                <div class="project-skills">
+                    {% if project.frontend_skills %}
+                    <div class="skills-row">
+                        <div class="skills-badges">
+                            {% for skill in project.frontend_skills %}
+                            <span class="skill-badge" title="{{ skill }}">{{ skill|slice:":2" }}</span>
+                            {% endfor %}
+                        </div>
+                        <span class="skills-label">Frontend</span>
+                    </div>
+                    {% endif %}
+
+                    {% if project.backend_skills %}
+                    <div class="skills-row">
+                        <div class="skills-badges">
+                            {% for skill in project.backend_skills %}
+                            <span class="skill-badge" title="{{ skill }}">{{ skill|slice:":2" }}</span>
+                            {% endfor %}
+                        </div>
+                        <span class="skills-label">Backend</span>
+                    </div>
+                    {% endif %}
                 </div>
-                <a href="#" class="project-link">View Project →</a>
-            </div>
-            
-            <div class="project-card">
-                <h3>Real-Time Analytics Dashboard</h3>
-                <p>Interactive dashboard for monitoring and visualizing business metrics in real-time.</p>
-                <div class="project-tags">
-                    <span class="tag">Python</span>
-                    <span class="tag">D3.js</span>
-                    <span class="tag">Redis</span>
+
+                <div class="project-links">
+                    {% if project.live_url %}
+                    <a href="{{ project.live_url }}" target="_blank" class="btn btn-sm btn-primary">
+                        Visit Website
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="7" y1="17" x2="17" y2="7"></line>
+                            <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                    </a>
+                    {% endif %}
+                    {% if project.github_url %}
+                    <a href="{{ project.github_url }}" target="_blank" class="btn btn-sm btn-outline">
+                        GitHub
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="7" y1="17" x2="17" y2="7"></line>
+                            <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                    </a>
+                    {% endif %}
                 </div>
-                <a href="#" class="project-link">View Project →</a>
             </div>
         </div>
+        {% endfor %}
     </div>
 </section>
 
 <!-- Contact Section -->
-<section id="contact" class="section contact-section">
-    <div class="container">
-        <h2 class="section-title">Get In Touch</h2>
-        
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
+<section id="contact" class="contact-section">
+    <div class="section-header">
+        <a href="#contact">
+            <h2 class="section-title">LET'S WORK<br>TOGETHER</h2>
+        </a>
+    </div>
+
+    <div class="contact-container">
+        <div class="contact-card">
+            <div class="contact-header">
+                <h3>Contact Form</h3>
+                <p>Please contact me directly at
+                    <a href="mailto:{{ email }}" class="email-link">{{ email|cut:"@"|add:"(at)"|add:email|slice:"email.index('@'):" }}</a>
+                    or drop your info here.
+                </p>
+            </div>
+
+            <form id="contact-form" method="post" action="{% url 'contact_submit' %}">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="full_name">Full Name</label>
+                        <input type="text" id="full_name" name="full_name" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Your Message</label>
+                    <textarea id="message" name="message" placeholder="Tell me about your project..." rows="5" required></textarea>
+                    <p class="form-note">I'll never share your data with anyone else. Pinky promise!</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full" id="submit-btn">
+                    <span class="btn-text">Send Message</span>
+                    <span class="btn-loading hidden">
+                        <svg class="spinner" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+                        </svg>
+                        Please wait
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </form>
         </div>
-        {% endif %}
-        
-        <form method="post" class="contact-form">
-            {% csrf_token %}
-            <div class="form-group">
-                {{ form.name }}
-            </div>
-            <div class="form-group">
-                {{ form.email }}
-            </div>
-            <div class="form-group">
-                {{ form.message }}
-            </div>
-            <button type="submit" class="btn btn-primary">Send Message</button>
-        </form>
     </div>
 </section>
 
+<!-- Toast Notification -->
+<div id="toast" class="toast hidden">
+    <div class="toast-content">
+        <span class="toast-icon"></span>
+        <span class="toast-message"></span>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    // Inject tools data for global_scene.js
-    window.TOOLS_DATA = [
-        {% for tool in tools %}
-        {
-            name: "{{ tool.name }}",
-            category: "{{ tool.category }}",
-            description: "{{ tool.description|escapejs }}"
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
+// Contact Form Handler
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
+
+    // Show loading state
+    btnText.classList.add('hidden');
+    btnLoading.classList.remove('hidden');
+    submitBtn.disabled = true;
+
+    try {
+        const formData = new FormData(form);
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Thank you! I\'ll get back to you soon.', 'success');
+            form.reset();
+        } else {
+            showToast(data.error || 'Something went wrong. Please try again.', 'error');
+        }
+    } catch (error) {
+        showToast('Something went wrong. Please try again.', 'error');
+    } finally {
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+        submitBtn.disabled = false;
+    }
+});
+
+function showToast(message, type) {
+    const toast = document.getElementById('toast');
+    const toastMessage = toast.querySelector('.toast-message');
+    const toastIcon = toast.querySelector('.toast-icon');
+
+    toastMessage.textContent = message;
+    toast.className = 'toast ' + type;
+
+    if (type === 'success') {
+        toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    } else {
+        toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+    }
+
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 4000);
+}
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
 </script>
 {% endblock %}

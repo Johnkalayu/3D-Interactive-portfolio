@@ -1,265 +1,263 @@
-// Global Three.js scene with orbiting tools
+/**
+ * Three.js 3D Scene
+ * Creates an interactive 3D background with geometric shapes
+ */
+
 (function() {
+    'use strict';
+
+    // Check if Three.js is available
     if (typeof THREE === 'undefined') {
-        console.error('Three.js not loaded');
+        console.warn('Three.js not loaded');
         return;
     }
-    
-    const container = document.getElementById('three-global');
-    const tooltip = document.getElementById('tool-tooltip');
-    const modal = document.getElementById('projects-modal');
-    const modalClose = document.querySelector('.modal-close');
-    
+
+    const container = document.getElementById('three-container');
+    if (!container) return;
+
     // Scene setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 15;
-    
-    const renderer = new THREE.WebGLRenderer({ 
-        alpha: true, 
-        antialias: true,
-        powerPreference: 'high-performance'
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    container.appendChild(renderer.domElement);
-    
-    // Globe
-    const globeGeometry = new THREE.SphereGeometry(2, 32, 32);
-    const globeMaterial = new THREE.MeshBasicMaterial({
-        color: 0x4f46e5,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.2
-    });
-    const globe = new THREE.Mesh(globeGeometry, globeMaterial);
-    scene.add(globe);
-    
-    // Infinity orbit path (∞ shape)
-    const orbitRadius = 5;
-    const orbitPoints = [];
-    const segments = 200;
-    for (let i = 0; i <= segments; i++) {
-        const t = (i / segments) * Math.PI * 2;
-        // Infinity curve (lemniscate of Bernoulli)
-        const scale = orbitRadius / (1 + Math.pow(Math.sin(t), 2));
-        orbitPoints.push(new THREE.Vector3(
-            scale * Math.cos(t),
-            Math.sin(t) * Math.cos(t) * 2,
-            scale * Math.sin(t) * Math.cos(t)
-        ));
-    }
-    const orbitGeometry = new THREE.BufferGeometry().setFromPoints(orbitPoints);
-    const orbitMaterial = new THREE.LineBasicMaterial({ 
-        color: 0x8b5cf6, 
-        transparent: true, 
-        opacity: 0.4 
-    });
-    const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
-    scene.add(orbitLine);
-    
-    // Tool orbiters
-    const orbiters = [];
-    const textureLoader = new THREE.TextureLoader();
-    const textureCache = {};
-    
-    // Function to get position on infinity curve
-    function getInfinityPosition(t) {
-        const scale = orbitRadius / (1 + Math.pow(Math.sin(t), 2));
-        return {
-            x: scale * Math.cos(t),
-            y: Math.sin(t) * Math.cos(t) * 2,
-            z: scale * Math.sin(t) * Math.cos(t)
-        };
-    }
-    
-    if (window.TOOLS_DATA && window.TOOLS_DATA.length > 0) {
-        window.TOOLS_DATA.forEach((tool, idx) => {
-            const t = (idx / window.TOOLS_DATA.length) * Math.PI * 2;
-            
-            // Load texture with caching
-            const iconPath = `/static/image/tools/${tool.name.toLowerCase()}.png`;
-            if (!textureCache[iconPath]) {
-                textureCache[iconPath] = textureLoader.load(
-                    iconPath,
-                    undefined,
-                    undefined,
-                    (err) => console.warn(`Failed to load icon: ${iconPath}`)
-                );
-            }
-            const texture = textureCache[iconPath];
-            
-            const spriteMaterial = new THREE.SpriteMaterial({ 
-                map: texture,
-                transparent: true
-            });
-            const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(1, 1, 1);
-            
-            orbiters.push({
-                sprite,
-                t,
-                speed: 0.15 + Math.random() * 0.1,
-                tool,
-                scale: 1,
-                targetScale: 1
-            });
-            
-            scene.add(sprite);
+    let scene, camera, renderer;
+    let geometries = [];
+    let mouseX = 0, mouseY = 0;
+    let windowHalfX = window.innerWidth / 2;
+    let windowHalfY = window.innerHeight / 2;
+    let animationId;
+
+    // Initialize the scene
+    function init() {
+        // Create scene
+        scene = new THREE.Scene();
+
+        // Create camera
+        camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        );
+        camera.position.z = 30;
+
+        // Create renderer
+        renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true
         });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(20, 20, 20);
+        scene.add(pointLight);
+
+        const pointLight2 = new THREE.PointLight(0x4a9eff, 0.5);
+        pointLight2.position.set(-20, -20, 10);
+        scene.add(pointLight2);
+
+        // Create floating geometries
+        createGeometries();
+
+        // Event listeners
+        document.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('resize', onWindowResize);
+
+        // Start animation
+        animate();
     }
-    
-    // Animation
-    const clock = new THREE.Clock();
-    let hoveredOrbiter = null;
-    let lastClickTime = 0;
-    const clickDebounce = 300;
-    
-    function animate() {
-        requestAnimationFrame(animate);
-        
-        let delta = clock.getDelta();
-        delta = Math.min(delta, 0.1); // Clamp delta
-        
-        // Rotate globe
-        globe.rotation.y += delta * 0.1;
-        globe.rotation.x += delta * 0.05;
-        
-        // Update orbiters along infinity path
-        orbiters.forEach(orbiter => {
-            orbiter.t += delta * orbiter.speed;
-            const pos = getInfinityPosition(orbiter.t);
-            orbiter.sprite.position.set(pos.x, pos.y, pos.z);
-            
-            // Smooth scale animation
-            orbiter.scale += (orbiter.targetScale - orbiter.scale) * 0.1;
-            orbiter.sprite.scale.set(orbiter.scale, orbiter.scale, 1);
-            
-            // Rotate sprites to face camera
-            orbiter.sprite.material.rotation += delta * 0.5;
+
+    // Create various floating geometric shapes
+    function createGeometries() {
+        const materials = [
+            new THREE.MeshPhongMaterial({
+                color: 0x4a9eff,
+                transparent: true,
+                opacity: 0.7,
+                wireframe: false
+            }),
+            new THREE.MeshPhongMaterial({
+                color: 0xff6b4a,
+                transparent: true,
+                opacity: 0.6,
+                wireframe: false
+            }),
+            new THREE.MeshPhongMaterial({
+                color: 0x4aff6b,
+                transparent: true,
+                opacity: 0.5,
+                wireframe: true
+            }),
+            new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.3,
+                wireframe: true
+            })
+        ];
+
+        // Create various shapes
+        const shapes = [
+            new THREE.IcosahedronGeometry(2, 0),
+            new THREE.OctahedronGeometry(1.5, 0),
+            new THREE.TetrahedronGeometry(1.8, 0),
+            new THREE.TorusGeometry(1, 0.4, 8, 16),
+            new THREE.DodecahedronGeometry(1.2, 0),
+            new THREE.BoxGeometry(1.5, 1.5, 1.5),
+        ];
+
+        // Create multiple instances
+        for (let i = 0; i < 15; i++) {
+            const geometry = shapes[Math.floor(Math.random() * shapes.length)];
+            const material = materials[Math.floor(Math.random() * materials.length)].clone();
+
+            const mesh = new THREE.Mesh(geometry, material);
+
+            // Random position
+            mesh.position.x = (Math.random() - 0.5) * 60;
+            mesh.position.y = (Math.random() - 0.5) * 40;
+            mesh.position.z = (Math.random() - 0.5) * 30 - 10;
+
+            // Random rotation
+            mesh.rotation.x = Math.random() * Math.PI;
+            mesh.rotation.y = Math.random() * Math.PI;
+
+            // Store animation properties
+            mesh.userData = {
+                rotationSpeed: {
+                    x: (Math.random() - 0.5) * 0.02,
+                    y: (Math.random() - 0.5) * 0.02,
+                    z: (Math.random() - 0.5) * 0.01
+                },
+                floatSpeed: Math.random() * 0.5 + 0.5,
+                floatOffset: Math.random() * Math.PI * 2,
+                originalY: mesh.position.y
+            };
+
+            geometries.push(mesh);
+            scene.add(mesh);
+        }
+
+        // Add some particle dust
+        createParticles();
+    }
+
+    // Create particle system for dust effect
+    function createParticles() {
+        const particleCount = 100;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 80;
+            positions[i + 1] = (Math.random() - 0.5) * 60;
+            positions[i + 2] = (Math.random() - 0.5) * 40;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.1,
+            transparent: true,
+            opacity: 0.6
         });
-        
-        renderer.render(scene, camera);
+
+        const particles = new THREE.Points(geometry, material);
+        particles.userData = { isParticles: true };
+        scene.add(particles);
+        geometries.push(particles);
     }
-    
-    // Mouse interaction - only in skills section
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    
-    function isInSkillsSection(clientY) {
-        const skillsSection = document.getElementById('skills');
-        if (!skillsSection) return false;
-        const rect = skillsSection.getBoundingClientRect();
-        return clientY >= rect.top && clientY <= rect.bottom;
+
+    // Mouse move handler
+    function onMouseMove(event) {
+        mouseX = (event.clientX - windowHalfX) / windowHalfX;
+        mouseY = (event.clientY - windowHalfY) / windowHalfY;
     }
-    
-    function onMouseMove(e) {
-        if (!isInSkillsSection(e.clientY)) {
-            tooltip.classList.remove('visible');
-            if (hoveredOrbiter) {
-                hoveredOrbiter.targetScale = 1;
-                hoveredOrbiter = null;
-            }
-            return;
-        }
-        
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        
-        raycaster.setFromCamera(mouse, camera);
-        const sprites = orbiters.map(o => o.sprite);
-        const intersects = raycaster.intersectObjects(sprites);
-        
-        // Reset previous hover
-        if (hoveredOrbiter && (intersects.length === 0 || intersects[0].object !== hoveredOrbiter.sprite)) {
-            hoveredOrbiter.targetScale = 1;
-            hoveredOrbiter = null;
-        }
-        
-        if (intersects.length > 0) {
-            const intersected = intersects[0].object;
-            const newHover = orbiters.find(o => o.sprite === intersected);
-            
-            if (newHover && newHover !== hoveredOrbiter) {
-                hoveredOrbiter = newHover;
-                hoveredOrbiter.targetScale = 1.5;
-            }
-            
-            if (hoveredOrbiter) {
-                document.body.style.cursor = 'pointer';
-                tooltip.classList.add('visible');
-                tooltip.style.left = e.clientX + 15 + 'px';
-                tooltip.style.top = e.clientY + 15 + 'px';
-                
-                document.getElementById('tooltip-name').textContent = hoveredOrbiter.tool.name;
-                document.getElementById('tooltip-category').textContent = hoveredOrbiter.tool.category;
-                document.getElementById('tooltip-description').textContent = hoveredOrbiter.tool.description;
-            }
-        } else {
-            document.body.style.cursor = 'default';
-            tooltip.classList.remove('visible');
-        }
-    }
-    
-    function onClick(e) {
-        if (!isInSkillsSection(e.clientY)) return;
-        
-        const now = Date.now();
-        if (now - lastClickTime < clickDebounce) return;
-        lastClickTime = now;
-        
-        if (hoveredOrbiter) {
-            showProjectsModal(hoveredOrbiter.tool.name);
-        }
-    }
-    
-    async function showProjectsModal(toolName) {
-        try {
-            const response = await fetch(`/api/projects/?tool=${encodeURIComponent(toolName)}`);
-            const data = await response.json();
-            
-            document.getElementById('modal-tool-name').textContent = `Projects using ${data.tool}`;
-            const projectsList = document.getElementById('modal-projects-list');
-            
-            if (data.projects.length === 0) {
-                projectsList.innerHTML = '<p>No projects found for this tool yet.</p>';
-            } else {
-                projectsList.innerHTML = data.projects.map(p => `
-                    <div class="modal-project">
-                        <h3>${p.title}</h3>
-                        <p>${p.description}</p>
-                        ${p.link ? `<a href="${p.link}" target="_blank" class="project-link">View Project →</a>` : ''}
-                        <div class="project-tags">
-                            ${p.tools.map(t => `<span class="tag">${t}</span>`).join('')}
-                        </div>
-                    </div>
-                `).join('');
-            }
-            
-            modal.classList.add('active');
-        } catch (err) {
-            console.error('Error fetching projects:', err);
-        }
-    }
-    
-    modalClose.addEventListener('click', () => {
-        modal.classList.remove('active');
-    });
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-        }
-    });
-    
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('click', onClick);
-    
-    window.addEventListener('resize', () => {
+
+    // Window resize handler
+    function onWindowResize() {
+        windowHalfX = window.innerWidth / 2;
+        windowHalfY = window.innerHeight / 2;
+
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
+
         renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Animation loop
+    function animate() {
+        animationId = requestAnimationFrame(animate);
+
+        const time = Date.now() * 0.001;
+
+        // Update geometries
+        geometries.forEach(mesh => {
+            if (mesh.userData.isParticles) {
+                // Rotate particles slowly
+                mesh.rotation.y += 0.0005;
+                return;
+            }
+
+            // Rotation
+            if (mesh.userData.rotationSpeed) {
+                mesh.rotation.x += mesh.userData.rotationSpeed.x;
+                mesh.rotation.y += mesh.userData.rotationSpeed.y;
+                mesh.rotation.z += mesh.userData.rotationSpeed.z;
+            }
+
+            // Floating motion
+            if (mesh.userData.floatSpeed) {
+                mesh.position.y = mesh.userData.originalY +
+                    Math.sin(time * mesh.userData.floatSpeed + mesh.userData.floatOffset) * 2;
+            }
+        });
+
+        // Camera responds to mouse
+        camera.position.x += (mouseX * 5 - camera.position.x) * 0.02;
+        camera.position.y += (-mouseY * 3 - camera.position.y) * 0.02;
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+    }
+
+    // Get scroll position for parallax effects
+    function getScrollProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        return docHeight > 0 ? scrollTop / docHeight : 0;
+    }
+
+    // Add scroll listener for depth effect
+    window.addEventListener('scroll', () => {
+        const progress = getScrollProgress();
+
+        geometries.forEach(mesh => {
+            if (mesh.userData.isParticles) return;
+
+            // Parallax depth effect
+            const depthFactor = mesh.position.z + 20;
+            mesh.position.z = depthFactor - progress * 10;
+        });
     });
-    
-    animate();
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+        if (renderer) {
+            renderer.dispose();
+        }
+    });
 })();
