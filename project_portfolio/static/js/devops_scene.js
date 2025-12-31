@@ -1,6 +1,12 @@
 /**
- * Interactive 3D DevOps Tools - Infinity Shape
- * Matching devops.png style with all tools
+ * 3D Skills Orbit - React Atom Style Animation
+ * Features:
+ * - 3 elliptical orbits like React logo
+ * - Tools orbit along the elliptical paths
+ * - Central nucleus with glow
+ * - Dynamic data from Django backend
+ * - Smooth 60fps animation
+ * - Hover/click interactivity
  */
 
 (function() {
@@ -14,56 +20,103 @@
     const container = document.getElementById('devops-container');
     if (!container) return;
 
-    // All DevOps tools from static/image/tools/
-    const toolsData = [
-        { name: 'Docker', image: '/static/image/tools/docker.png', description: 'Container platform for building, shipping, and running applications in isolated environments.', category: 'Containerization', color: 0x2496ED },
-        { name: 'Kubernetes', image: '/static/image/tools/kubernetes.png', description: 'Container orchestration platform for automating deployment, scaling, and management.', category: 'Orchestration', color: 0x326CE5 },
-        { name: 'Jenkins', image: '/static/image/tools/jenkins.png', description: 'Open-source automation server for CI/CD pipelines.', category: 'CI/CD', color: 0xD33833 },
-        { name: 'Terraform', image: '/static/image/tools/terraform.png', description: 'Infrastructure as Code tool for building cloud infrastructure.', category: 'IaC', color: 0x7B42BC },
-        { name: 'AWS', image: '/static/image/tools/aws.png', description: 'Amazon Web Services - comprehensive cloud computing platform.', category: 'Cloud', color: 0xFF9900 },
-        { name: 'Azure', image: '/static/image/tools/azure.png', description: 'Microsoft Azure cloud computing platform and services.', category: 'Cloud', color: 0x0078D4 },
-        { name: 'Git', image: '/static/image/tools/git.png', description: 'Distributed version control system for source code.', category: 'Version Control', color: 0xF05032 },
-        { name: 'GitLab', image: '/static/image/tools/gitlab.png', description: 'DevOps platform for the complete software development lifecycle.', category: 'DevOps', color: 0xFC6D26 },
-        { name: 'Ansible', image: '/static/image/tools/ansible.png', description: 'Agentless automation tool for configuration management.', category: 'Configuration', color: 0xEE0000 },
-        { name: 'Prometheus', image: '/static/image/tools/prometheus.png', description: 'Open-source monitoring and alerting toolkit.', category: 'Monitoring', color: 0xE6522C },
-        { name: 'Grafana', image: '/static/image/tools/grafana.png', description: 'Analytics and interactive visualization platform.', category: 'Visualization', color: 0xF46800 },
-        { name: 'Linux', image: '/static/image/tools/linux.png', description: 'Open-source OS kernel powering most servers.', category: 'Operating System', color: 0xFCC624 },
-        { name: 'Python', image: '/static/image/tools/python.png', description: 'Programming language for automation and scripting.', category: 'Programming', color: 0x3776AB },
-        { name: 'Nginx', image: '/static/image/tools/nginx.png', description: 'High-performance web server and reverse proxy.', category: 'Web Server', color: 0x009639 },
-        { name: 'Helm', image: '/static/image/tools/helm.png', description: 'Package manager for Kubernetes applications.', category: 'Orchestration', color: 0x0F1689 },
-        { name: 'Bash', image: '/static/image/tools/bash.png', description: 'Unix shell and command language for scripting.', category: 'Scripting', color: 0x4EAA25 },
-        { name: 'Datadog', image: '/static/image/tools/datadog.png', description: 'Monitoring and analytics platform for cloud apps.', category: 'Monitoring', color: 0x632CA6 },
-        { name: 'SonarQube', image: '/static/image/tools/sonarqube.png', description: 'Code quality and security analysis tool.', category: 'Security', color: 0x4E9BCD },
-        { name: 'Trivy', image: '/static/image/tools/trivy.png', description: 'Container vulnerability scanner.', category: 'Security', color: 0x1904DA },
-        { name: 'Maven', image: '/static/image/tools/mavne.png', description: 'Build automation tool for Java projects.', category: 'Build', color: 0xC71A36 },
-        { name: 'Snyk', image: '/static/image/tools/snyk.png', description: 'Developer security platform for finding vulnerabilities.', category: 'Security', color: 0x4C4A73 },
-        { name: 'JFrog', image: '/static/image/tools/jfrog.png', description: 'Universal artifact repository manager.', category: 'Artifacts', color: 0x40BE46 },
-    ];
-
     // Scene variables
     let scene, camera, renderer;
-    let infinityGroup;
-    let toolMeshes = [];
-    let centralHub, hubRing, hubGlow;
+    let atomGroup;
+    let toolNodes = [];
+    let nucleus, nucleusGlow;
+    let orbitLines = [];
     let raycaster, mouse;
-    let hoveredTool = null;
+    let hoveredNode = null;
     let animationId;
     let isOnSkillsSection = false;
+    let isTabActive = true;
+    let toolsData = [];
+    let textureCache = {};
 
-    // Animation targets - larger scale for sidebar visibility
-    let currentScale = 0.7;
-    let targetScale = 0.7;
-    let currentPosX = 14;
-    let targetPosX = 14;
+    // Animation state
+    let currentScale = 0.5;
+    let targetScale = 0.5;
+    let currentPosX = 12;
+    let targetPosX = 12;
+    let time = 0;
+
+    // React atom parameters
+    const ORBIT_RADIUS_X = 12;
+    const ORBIT_RADIUS_Y = 5;
+    const NODE_SIZE = 1.8;
+    const NUCLEUS_RADIUS = 2.5;
+
+    // 3 orbits at different rotations (like React logo)
+    const ORBIT_ROTATIONS = [
+        { x: 0, y: 0, z: 0 },                    // Horizontal
+        { x: 0, y: 0, z: Math.PI / 3 },          // Tilted 60°
+        { x: 0, y: 0, z: -Math.PI / 3 }          // Tilted -60°
+    ];
 
     const tooltip = document.getElementById('tool-tooltip');
     const modal = document.getElementById('tool-modal');
 
-    // Infinity shape parameters - much wider like devops.png
-    const LOOP_RADIUS = 7;
-    const CENTER_OFFSET = 12;
+    // Fetch tools from Django backend
+    async function fetchTools() {
+        try {
+            const response = await fetch('/api/tools/');
+            const data = await response.json();
+            return data.tools || [];
+        } catch (error) {
+            console.warn('Failed to fetch tools from API, using fallback data');
+            return getDefaultTools();
+        }
+    }
 
-    function init() {
+    function getDefaultTools() {
+        return [
+            { name: 'Docker', icon_url: '/static/image/tools/docker.png', description: 'Container platform for building, shipping, and running applications.', category: 'Containerization', color: '#2496ED', link: '' },
+            { name: 'Kubernetes', icon_url: '/static/image/tools/kubernetes.png', description: 'Container orchestration platform.', category: 'Orchestration', color: '#326CE5', link: '' },
+            { name: 'Jenkins', icon_url: '/static/image/tools/jenkins.png', description: 'CI/CD automation server.', category: 'CI/CD', color: '#D33833', link: '' },
+            { name: 'Terraform', icon_url: '/static/image/tools/terraform.png', description: 'Infrastructure as Code tool.', category: 'IaC', color: '#7B42BC', link: '' },
+            { name: 'AWS', icon_url: '/static/image/tools/aws.png', description: 'Amazon Web Services cloud platform.', category: 'Cloud', color: '#FF9900', link: '' },
+            { name: 'Azure', icon_url: '/static/image/tools/azure.png', description: 'Microsoft Azure cloud platform.', category: 'Cloud', color: '#0078D4', link: '' },
+            { name: 'Git', icon_url: '/static/image/tools/git.png', description: 'Distributed version control system.', category: 'Version Control', color: '#F05032', link: '' },
+            { name: 'GitLab', icon_url: '/static/image/tools/gitlab.png', description: 'DevOps platform.', category: 'DevOps', color: '#FC6D26', link: '' },
+            { name: 'Ansible', icon_url: '/static/image/tools/ansible.png', description: 'Configuration management tool.', category: 'Configuration', color: '#EE0000', link: '' },
+            { name: 'Prometheus', icon_url: '/static/image/tools/prometheus.png', description: 'Monitoring and alerting toolkit.', category: 'Monitoring', color: '#E6522C', link: '' },
+            { name: 'Grafana', icon_url: '/static/image/tools/grafana.png', description: 'Analytics and visualization platform.', category: 'Visualization', color: '#F46800', link: '' },
+            { name: 'Linux', icon_url: '/static/image/tools/linux.png', description: 'Open-source operating system.', category: 'Operating System', color: '#FCC624', link: '' },
+            { name: 'Python', icon_url: '/static/image/tools/python.png', description: 'Programming language.', category: 'Programming', color: '#3776AB', link: '' },
+            { name: 'Nginx', icon_url: '/static/image/tools/nginx.png', description: 'Web server and reverse proxy.', category: 'Web Server', color: '#009639', link: '' },
+            { name: 'Helm', icon_url: '/static/image/tools/helm.png', description: 'Kubernetes package manager.', category: 'Orchestration', color: '#0F1689', link: '' },
+            { name: 'Bash', icon_url: '/static/image/tools/bash.png', description: 'Unix shell scripting.', category: 'Scripting', color: '#4EAA25', link: '' },
+            { name: 'Datadog', icon_url: '/static/image/tools/datadog.png', description: 'Cloud monitoring platform.', category: 'Monitoring', color: '#632CA6', link: '' },
+            { name: 'SonarQube', icon_url: '/static/image/tools/sonarqube.png', description: 'Code quality analysis.', category: 'Security', color: '#4E9BCD', link: '' },
+            { name: 'Trivy', icon_url: '/static/image/tools/trivy.png', description: 'Container vulnerability scanner.', category: 'Security', color: '#1904DA', link: '' },
+            { name: 'Maven', icon_url: '/static/image/tools/mavne.png', description: 'Build automation tool.', category: 'Build', color: '#C71A36', link: '' },
+            { name: 'Snyk', icon_url: '/static/image/tools/snyk.png', description: 'Security platform.', category: 'Security', color: '#4C4A73', link: '' },
+        ];
+    }
+
+    // Create rounded rectangle shape
+    function createRoundedRectShape(width, height, radius) {
+        const shape = new THREE.Shape();
+        const x = -width / 2;
+        const y = -height / 2;
+
+        shape.moveTo(x + radius, y);
+        shape.lineTo(x + width - radius, y);
+        shape.quadraticCurveTo(x + width, y, x + width, y + radius);
+        shape.lineTo(x + width, y + height - radius);
+        shape.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        shape.lineTo(x + radius, y + height);
+        shape.quadraticCurveTo(x, y + height, x, y + height - radius);
+        shape.lineTo(x, y + radius);
+        shape.quadraticCurveTo(x, y, x + radius, y);
+
+        return shape;
+    }
+
+    async function init() {
+        toolsData = await fetchTools();
+
         scene = new THREE.Scene();
 
         camera = new THREE.PerspectiveCamera(
@@ -77,7 +130,8 @@
 
         renderer = new THREE.WebGLRenderer({
             alpha: true,
-            antialias: true
+            antialias: true,
+            powerPreference: 'high-performance'
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -87,36 +141,33 @@
         mouse = new THREE.Vector2();
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         scene.add(ambientLight);
 
-        const pointLight1 = new THREE.PointLight(0xffffff, 0.6);
-        pointLight1.position.set(10, 10, 10);
+        const pointLight1 = new THREE.PointLight(0xffffff, 0.5);
+        pointLight1.position.set(15, 15, 15);
         scene.add(pointLight1);
 
-        const pointLight2 = new THREE.PointLight(0x8b5cf6, 0.4);
-        pointLight2.position.set(-10, -10, 10);
+        const pointLight2 = new THREE.PointLight(0x61dafb, 0.4);
+        pointLight2.position.set(-15, -15, 10);
         scene.add(pointLight2);
 
-        // Create infinity group
-        infinityGroup = new THREE.Group();
-        scene.add(infinityGroup);
+        // Create atom group
+        atomGroup = new THREE.Group();
+        scene.add(atomGroup);
 
-        // Create central hub (like devops.png purple circle)
-        createCentralHub();
+        // Create nucleus (center)
+        createNucleus();
 
-        // Create infinity path outline
-        createInfinityPath();
+        // Create 3 elliptical orbit paths
+        createOrbitPaths();
 
-        // Create tool spheres
-        const textureLoader = new THREE.TextureLoader();
-        toolsData.forEach((tool, index) => {
-            createToolSphere(tool, index, textureLoader);
-        });
+        // Distribute tools across 3 orbits
+        await createToolNodes();
 
-        // Initial position - larger on sidebar
-        infinityGroup.position.set(14, 0, 0);
-        infinityGroup.scale.setScalar(0.7);
+        // Initial position
+        atomGroup.position.set(12, 0, 0);
+        atomGroup.scale.setScalar(0.5);
 
         // Event listeners
         window.addEventListener('resize', onWindowResize);
@@ -124,141 +175,192 @@
         window.addEventListener('click', onMouseClick);
         window.addEventListener('scroll', onScroll);
 
+        document.addEventListener('visibilitychange', () => {
+            isTabActive = !document.hidden;
+        });
+
         onScroll();
         animate();
     }
 
-    function createCentralHub() {
-        // Central purple circle - like devops.png
-        const hubGeometry = new THREE.CircleGeometry(5.0, 64);
-        const hubMaterial = new THREE.MeshBasicMaterial({
-            color: 0x6366f1,
-            transparent: true,
-            opacity: 0.6,
-            side: THREE.DoubleSide
-        });
-        centralHub = new THREE.Mesh(hubGeometry, hubMaterial);
-        centralHub.position.z = -0.5;
-        infinityGroup.add(centralHub);
-
-        // White/light ring around hub
-        const ringGeometry = new THREE.RingGeometry(4.8, 5.5, 64);
-        const ringMaterial = new THREE.MeshBasicMaterial({
-            color: 0xc4b5fd,
-            transparent: true,
-            opacity: 0.7,
-            side: THREE.DoubleSide
-        });
-        hubRing = new THREE.Mesh(ringGeometry, ringMaterial);
-        hubRing.position.z = -0.4;
-        infinityGroup.add(hubRing);
-
+    function createNucleus() {
         // Outer glow
-        const glowGeometry = new THREE.CircleGeometry(6.5, 64);
+        const glowGeometry = new THREE.CircleGeometry(NUCLEUS_RADIUS + 1.5, 64);
         const glowMaterial = new THREE.MeshBasicMaterial({
-            color: 0x8b5cf6,
+            color: 0x61dafb,
             transparent: true,
-            opacity: 0.2,
+            opacity: 0.15,
             side: THREE.DoubleSide
         });
-        hubGlow = new THREE.Mesh(glowGeometry, glowMaterial);
-        hubGlow.position.z = -0.6;
-        infinityGroup.add(hubGlow);
-    }
+        nucleusGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+        nucleusGlow.position.z = -0.2;
+        atomGroup.add(nucleusGlow);
 
-    function createInfinityPath() {
-        // Create the infinity path line (subtle, like devops.png)
-        const points = [];
-        const segments = 200;
-
-        for (let i = 0; i <= segments; i++) {
-            const t = (i / segments) * Math.PI * 2;
-            const pos = getInfinityPosition(t);
-            points.push(new THREE.Vector3(pos.x, pos.y, -1));
-        }
-
-        const pathGeometry = new THREE.BufferGeometry().setFromPoints(points);
-        const pathMaterial = new THREE.LineBasicMaterial({
-            color: 0x94a3b8,
+        // Main nucleus
+        const nucleusGeometry = new THREE.CircleGeometry(NUCLEUS_RADIUS, 64);
+        const nucleusMaterial = new THREE.MeshBasicMaterial({
+            color: 0x61dafb,
             transparent: true,
-            opacity: 0.3
+            opacity: 0.8,
+            side: THREE.DoubleSide
         });
-        const infinityLine = new THREE.Line(pathGeometry, pathMaterial);
-        infinityGroup.add(infinityLine);
-    }
+        nucleus = new THREE.Mesh(nucleusGeometry, nucleusMaterial);
+        atomGroup.add(nucleus);
 
-    // Figure-8 infinity shape matching devops.png
-    function getInfinityPosition(t) {
-        // Two circles forming figure-8
-        const x = CENTER_OFFSET * Math.sin(t);
-        const y = LOOP_RADIUS * Math.sin(t) * Math.cos(t);
-        // Depth variation for 3D effect
-        const z = Math.sin(t * 2) * 1.5;
-
-        return { x, y, z };
-    }
-
-    function createToolSphere(tool, index, textureLoader) {
-        const totalTools = toolsData.length;
-        const sphereRadius = 1.2;
-
-        // Create a group to hold sphere and icon together
-        const toolGroup = new THREE.Group();
-
-        // Create sphere geometry (like devops.png balls)
-        const geometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
-
-        // Create material with tool color
-        const material = new THREE.MeshPhongMaterial({
-            color: tool.color,
-            shininess: 120,
-            specular: 0x666666,
+        // Inner ring
+        const ringGeometry = new THREE.RingGeometry(NUCLEUS_RADIUS - 0.3, NUCLEUS_RADIUS, 64);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            color: 0x88e4fc,
             transparent: true,
-            opacity: 0.85
+            opacity: 0.9,
+            side: THREE.DoubleSide
         });
+        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        ring.position.z = 0.01;
+        atomGroup.add(ring);
+    }
 
-        const sphere = new THREE.Mesh(geometry, material);
-        toolGroup.add(sphere);
+    function createOrbitPaths() {
+        ORBIT_ROTATIONS.forEach((rotation, index) => {
+            const points = [];
+            const segments = 128;
 
-        // Position group on infinity path
-        const t = (index / totalTools) * Math.PI * 2;
-        const pos = getInfinityPosition(t);
-        toolGroup.position.set(pos.x, pos.y, pos.z);
-
-        toolGroup.userData = {
-            toolData: tool,
-            index: index,
-            t: t,
-            baseRadius: sphereRadius,
-            sphere: sphere
-        };
-
-        toolMeshes.push(toolGroup);
-        infinityGroup.add(toolGroup);
-
-        // Load texture and apply as sprite synced with sphere center
-        textureLoader.load(
-            tool.image,
-            (texture) => {
-                // Create a sprite for the icon - synced at center of sphere
-                const spriteMaterial = new THREE.SpriteMaterial({
-                    map: texture,
-                    transparent: true,
-                    depthTest: false,
-                    depthWrite: false
-                });
-                const sprite = new THREE.Sprite(spriteMaterial);
-                sprite.scale.set(1.6, 1.6, 1);
-                // Icon synced at center of sphere (not floating on top)
-                sprite.position.set(0, 0, 0.1);
-                toolGroup.userData.sprite = sprite;
-                toolGroup.add(sprite);
-            },
-            undefined,
-            (error) => {
-                console.warn('Failed to load texture for', tool.name);
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                points.push(new THREE.Vector3(
+                    Math.cos(angle) * ORBIT_RADIUS_X,
+                    Math.sin(angle) * ORBIT_RADIUS_Y,
+                    0
+                ));
             }
-        );
+
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({
+                color: 0x61dafb,
+                transparent: true,
+                opacity: 0.3
+            });
+            const orbitLine = new THREE.Line(geometry, material);
+            orbitLine.rotation.set(rotation.x, rotation.y, rotation.z);
+            orbitLine.position.z = -0.1;
+            orbitLines.push(orbitLine);
+            atomGroup.add(orbitLine);
+        });
+    }
+
+    async function createToolNodes() {
+        const textureLoader = new THREE.TextureLoader();
+        const totalTools = toolsData.length;
+        const toolsPerOrbit = Math.ceil(totalTools / 3);
+
+        const loadPromises = toolsData.map((tool, i) => {
+            const orbitIndex = Math.floor(i / toolsPerOrbit) % 3;
+            const positionInOrbit = i % toolsPerOrbit;
+            const toolsInThisOrbit = Math.min(toolsPerOrbit, totalTools - orbitIndex * toolsPerOrbit);
+            const angle = (positionInOrbit / toolsInThisOrbit) * Math.PI * 2;
+
+            return createToolNode(tool, i, orbitIndex, angle, textureLoader);
+        });
+
+        await Promise.all(loadPromises);
+    }
+
+    function createToolNode(tool, index, orbitIndex, angle, textureLoader) {
+        return new Promise((resolve) => {
+            const nodeGroup = new THREE.Group();
+
+            // Parse hex color
+            const color = parseInt(tool.color.replace('#', ''), 16) || 0x61dafb;
+
+            // Create rounded rectangle glow
+            const glowShape = createRoundedRectShape(NODE_SIZE + 0.4, NODE_SIZE + 0.4, 0.3);
+            const glowGeometry = new THREE.ShapeGeometry(glowShape);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const glowRect = new THREE.Mesh(glowGeometry, glowMaterial);
+            glowRect.position.z = -0.02;
+            nodeGroup.add(glowRect);
+
+            // Main rectangle background
+            const rectShape = createRoundedRectShape(NODE_SIZE, NODE_SIZE, 0.25);
+            const rectGeometry = new THREE.ShapeGeometry(rectShape);
+            const rectMaterial = new THREE.MeshBasicMaterial({
+                color: 0x0f172a,
+                transparent: true,
+                opacity: 0.95,
+                side: THREE.DoubleSide
+            });
+            const rect = new THREE.Mesh(rectGeometry, rectMaterial);
+            nodeGroup.add(rect);
+
+            // Border
+            const borderPoints = rectShape.getPoints(32);
+            borderPoints.push(borderPoints[0]);
+            const borderGeometry = new THREE.BufferGeometry().setFromPoints(
+                borderPoints.map(p => new THREE.Vector3(p.x, p.y, 0.01))
+            );
+            const borderMaterial = new THREE.LineBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.85
+            });
+            const border = new THREE.Line(borderGeometry, borderMaterial);
+            nodeGroup.add(border);
+
+            // Store data
+            nodeGroup.userData = {
+                toolData: tool,
+                index: index,
+                orbitIndex: orbitIndex,
+                baseAngle: angle,
+                rect: rect,
+                glowRect: glowRect,
+                color: color
+            };
+
+            toolNodes.push(nodeGroup);
+            atomGroup.add(nodeGroup);
+
+            // Load icon
+            const iconUrl = tool.icon_url;
+            if (textureCache[iconUrl]) {
+                addIconSprite(nodeGroup, textureCache[iconUrl]);
+                resolve();
+            } else {
+                textureLoader.load(
+                    iconUrl,
+                    (texture) => {
+                        textureCache[iconUrl] = texture;
+                        addIconSprite(nodeGroup, texture);
+                        resolve();
+                    },
+                    undefined,
+                    () => {
+                        console.warn('Failed to load icon for', tool.name);
+                        resolve();
+                    }
+                );
+            }
+        });
+    }
+
+    function addIconSprite(nodeGroup, texture) {
+        const spriteMaterial = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false
+        });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        const iconSize = NODE_SIZE * 0.7;
+        sprite.scale.set(iconSize, iconSize, 1);
+        sprite.position.set(0, 0, 0.1);
+        nodeGroup.userData.sprite = sprite;
+        nodeGroup.add(sprite);
     }
 
     function onWindowResize() {
@@ -270,10 +372,7 @@
     function onScroll() {
         const skillsSection = document.getElementById('skills');
         if (!skillsSection) {
-            isOnSkillsSection = false;
-            targetScale = 0.7;
-            targetPosX = 14;
-            container.style.pointerEvents = 'none';
+            setInactiveState();
             return;
         }
 
@@ -283,22 +382,26 @@
         if (rect.top < windowHeight * 0.7 && rect.bottom > windowHeight * 0.3) {
             if (!isOnSkillsSection) {
                 isOnSkillsSection = true;
-                targetScale = 1.5;
-                targetPosX = 6;
+                targetScale = 1.2;
+                targetPosX = 4;
                 container.style.pointerEvents = 'auto';
             }
         } else {
             if (isOnSkillsSection) {
-                isOnSkillsSection = false;
-                targetScale = 0.7;
-                targetPosX = 14;
-                container.style.pointerEvents = 'none';
-                hideTooltip();
-                if (hoveredTool) {
-                    resetTool(hoveredTool);
-                    hoveredTool = null;
-                }
+                setInactiveState();
             }
+        }
+    }
+
+    function setInactiveState() {
+        isOnSkillsSection = false;
+        targetScale = 0.5;
+        targetPosX = 12;
+        container.style.pointerEvents = 'none';
+        hideTooltip();
+        if (hoveredNode) {
+            resetNode(hoveredNode);
+            hoveredNode = null;
         }
     }
 
@@ -310,37 +413,52 @@
 
         raycaster.setFromCamera(mouse, camera);
 
-        // Get all spheres from tool groups for intersection
-        const spheres = toolMeshes.map(g => g.userData.sphere).filter(Boolean);
-        const intersects = raycaster.intersectObjects(spheres);
+        const rects = toolNodes.map(n => n.userData.rect).filter(Boolean);
+        const intersects = raycaster.intersectObjects(rects);
 
         if (intersects.length > 0) {
-            // Find the parent group of the intersected sphere
-            const intersectedSphere = intersects[0].object;
-            const toolGroup = toolMeshes.find(g => g.userData.sphere === intersectedSphere);
+            const intersectedRect = intersects[0].object;
+            const node = toolNodes.find(n => n.userData.rect === intersectedRect);
 
-            if (toolGroup && hoveredTool !== toolGroup) {
-                if (hoveredTool) resetTool(hoveredTool);
-
-                hoveredTool = toolGroup;
-                hoveredTool.scale.setScalar(1.3);
-                if (hoveredTool.userData.sprite) {
-                    hoveredTool.userData.sprite.scale.set(2.0, 2.0, 1);
-                }
-
-                showTooltip(hoveredTool.userData.toolData, event.clientX, event.clientY);
-            } else if (toolGroup) {
+            if (node && hoveredNode !== node) {
+                if (hoveredNode) resetNode(hoveredNode);
+                hoveredNode = node;
+                highlightNode(hoveredNode);
+                showTooltip(hoveredNode.userData.toolData, event.clientX, event.clientY);
+            } else if (node) {
                 updateTooltipPosition(event.clientX, event.clientY);
             }
 
             document.body.style.cursor = 'pointer';
         } else {
-            if (hoveredTool) {
-                resetTool(hoveredTool);
-                hoveredTool = null;
+            if (hoveredNode) {
+                resetNode(hoveredNode);
+                hoveredNode = null;
                 hideTooltip();
             }
             document.body.style.cursor = 'default';
+        }
+    }
+
+    function highlightNode(node) {
+        node.scale.setScalar(1.3);
+        if (node.userData.glowRect) {
+            node.userData.glowRect.material.opacity = 0.6;
+        }
+        if (node.userData.sprite) {
+            const iconSize = NODE_SIZE * 0.85;
+            node.userData.sprite.scale.set(iconSize, iconSize, 1);
+        }
+    }
+
+    function resetNode(node) {
+        node.scale.setScalar(1);
+        if (node.userData.glowRect) {
+            node.userData.glowRect.material.opacity = 0.3;
+        }
+        if (node.userData.sprite) {
+            const iconSize = NODE_SIZE * 0.7;
+            node.userData.sprite.scale.set(iconSize, iconSize, 1);
         }
     }
 
@@ -348,33 +466,30 @@
         if (!isOnSkillsSection) return;
 
         raycaster.setFromCamera(mouse, camera);
-        const spheres = toolMeshes.map(g => g.userData.sphere).filter(Boolean);
-        const intersects = raycaster.intersectObjects(spheres);
+        const rects = toolNodes.map(n => n.userData.rect).filter(Boolean);
+        const intersects = raycaster.intersectObjects(rects);
 
         if (intersects.length > 0) {
-            const intersectedSphere = intersects[0].object;
-            const toolGroup = toolMeshes.find(g => g.userData.sphere === intersectedSphere);
-            if (toolGroup) {
-                showToolModal(toolGroup.userData.toolData);
+            const intersectedRect = intersects[0].object;
+            const node = toolNodes.find(n => n.userData.rect === intersectedRect);
+            if (node) {
+                const tool = node.userData.toolData;
+                console.log('Clicked tool:', tool.name);
+                if (tool.link) {
+                    window.open(tool.link, '_blank');
+                } else {
+                    showModal(tool);
+                }
             }
         }
     }
 
-    function resetTool(toolGroup) {
-        if (toolGroup) {
-            toolGroup.scale.setScalar(1);
-            if (toolGroup.userData.sprite) {
-                toolGroup.userData.sprite.scale.set(1.6, 1.6, 1);
-            }
-        }
-    }
-
-    function showTooltip(toolData, x, y) {
+    function showTooltip(tool, x, y) {
         if (!tooltip) return;
         tooltip.innerHTML = `
             <div class="tooltip-header">
-                <span class="tooltip-name">${toolData.name}</span>
-                <span class="tooltip-category">${toolData.category}</span>
+                <span class="tooltip-name">${tool.name}</span>
+                <span class="tooltip-category">${tool.category}</span>
             </div>
             <p class="tooltip-hint">Click for details</p>
         `;
@@ -384,10 +499,10 @@
 
     function updateTooltipPosition(x, y) {
         if (!tooltip) return;
-        let posX = x + 20;
-        let posY = y + 20;
-        if (posX + 220 > window.innerWidth) posX = x - 220;
-        if (posY + 100 > window.innerHeight) posY = y - 100;
+        let posX = x + 18;
+        let posY = y + 18;
+        if (posX + 220 > window.innerWidth - 15) posX = x - 220 - 15;
+        if (posY + 80 > window.innerHeight - 15) posY = y - 80 - 15;
         tooltip.style.left = posX + 'px';
         tooltip.style.top = posY + 'px';
     }
@@ -396,70 +511,95 @@
         if (tooltip) tooltip.classList.add('hidden');
     }
 
-    function showToolModal(toolData) {
+    function showModal(tool) {
         if (!modal) return;
         modal.innerHTML = `
             <div class="modal-content">
                 <button class="modal-close" onclick="this.parentElement.parentElement.classList.add('hidden')">&times;</button>
                 <div class="modal-header">
-                    <img src="${toolData.image}" alt="${toolData.name}" class="modal-icon" onerror="this.style.display='none'">
+                    <img src="${tool.icon_url}" alt="${tool.name}" class="modal-icon" onerror="this.style.display='none'">
                     <div>
-                        <h2 class="modal-title">${toolData.name}</h2>
-                        <span class="modal-category">${toolData.category}</span>
+                        <h2 class="modal-title">${tool.name}</h2>
+                        <span class="modal-category">${tool.category}</span>
                     </div>
                 </div>
-                <p class="modal-description">${toolData.description}</p>
+                <p class="modal-description">${tool.description}</p>
             </div>
         `;
         modal.classList.remove('hidden');
-        modal.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+        };
     }
 
     function animate() {
         animationId = requestAnimationFrame(animate);
 
-        const time = Date.now() * 0.001;
-        const speed = isOnSkillsSection ? 0.06 : 0.04;
+        if (!isTabActive) return;
+
+        time += 0.016; // ~60fps
+        const speed = isOnSkillsSection ? 0.4 : 0.25;
 
         // Smooth transitions
         currentScale += (targetScale - currentScale) * 0.04;
         currentPosX += (targetPosX - currentPosX) * 0.04;
 
-        infinityGroup.position.x = currentPosX;
-        infinityGroup.position.y = Math.sin(time * 0.3) * 0.3;
-        infinityGroup.scale.setScalar(currentScale);
+        atomGroup.position.x = currentPosX;
+        atomGroup.position.y = Math.sin(time * 0.5) * 0.3;
+        atomGroup.scale.setScalar(currentScale);
 
-        // Animate tools along infinity path
-        toolMeshes.forEach((toolGroup) => {
-            if (!toolGroup.userData) return;
+        // Animate tools along their orbits
+        toolNodes.forEach((node) => {
+            const { orbitIndex, baseAngle } = node.userData;
+            const rotation = ORBIT_ROTATIONS[orbitIndex];
 
-            toolGroup.userData.t += speed * 0.01;
-            const pos = getInfinityPosition(toolGroup.userData.t);
-            toolGroup.position.x = pos.x;
-            toolGroup.position.y = pos.y;
-            toolGroup.position.z = pos.z;
+            // Calculate position on ellipse
+            const currentAngle = baseAngle + time * speed;
+            const x = Math.cos(currentAngle) * ORBIT_RADIUS_X;
+            const y = Math.sin(currentAngle) * ORBIT_RADIUS_Y;
 
-            // Rotate the inner sphere slightly
-            if (toolGroup.userData.sphere) {
-                toolGroup.userData.sphere.rotation.y += 0.01;
-            }
+            // Apply orbit rotation
+            const cosZ = Math.cos(rotation.z);
+            const sinZ = Math.sin(rotation.z);
+            const rotatedX = x * cosZ - y * sinZ;
+            const rotatedY = x * sinZ + y * cosZ;
+
+            // Slight z variation for depth
+            const z = Math.sin(currentAngle) * 1.5;
+
+            node.position.set(rotatedX, rotatedY, z);
         });
 
-        // Rotate hub elements
-        if (centralHub) centralHub.rotation.z += 0.002;
-        if (hubRing) hubRing.rotation.z -= 0.001;
+        // Animate nucleus
+        if (nucleus) {
+            nucleus.rotation.z += 0.003;
+        }
+        if (nucleusGlow) {
+            nucleusGlow.scale.setScalar(1 + Math.sin(time * 2) * 0.08);
+        }
+
+        // Subtle rotation of entire atom
+        atomGroup.rotation.y = Math.sin(time * 0.2) * 0.1;
 
         renderer.render(scene, camera);
     }
 
+    // Initialize
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
 
+    // Cleanup
     window.addEventListener('beforeunload', () => {
         if (animationId) cancelAnimationFrame(animationId);
-        if (renderer) renderer.dispose();
+        if (renderer) {
+            renderer.dispose();
+            renderer.forceContextLoss();
+        }
+        Object.values(textureCache).forEach(texture => {
+            if (texture && texture.dispose) texture.dispose();
+        });
     });
 })();

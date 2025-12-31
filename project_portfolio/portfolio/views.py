@@ -2,14 +2,22 @@
 Portfolio views - Handle all page rendering and form processing
 """
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Q
 
-from .models import Project, Skill, ContactMessage, SiteSettings
+from .models import (
+    Project, Skill, ContactMessage, SiteSettings,
+    ProjectCategory, Technology,
+    Tag, Article,
+    WorkExperience, Education, Certification, ResumeSettings,
+    Testimonial, Tool
+)
 from .forms import ContactForm
 
 
@@ -35,11 +43,19 @@ def home(request):
     # Use default projects (skip database for now)
     projects = get_default_projects()
 
+    # Get project categories for filtering tabs
+    categories = ProjectCategory.objects.all()
+
+    # Get testimonials for homepage
+    testimonials = Testimonial.objects.filter(show_on_homepage=True, is_featured=True)[:6]
+
     # Contact form
     form = ContactForm()
 
     context.update({
         'projects': projects,
+        'categories': categories,
+        'testimonials': testimonials,
         'skills': [],
         'form': form,
     })
@@ -163,3 +179,193 @@ def get_default_projects():
             'backend_skills': [],
         },
     ]
+
+
+# =============================================================================
+# Projects Page Views
+# =============================================================================
+
+def projects_list(request):
+    """Projects page with filtering"""
+    context = get_site_context()
+
+    projects = Project.objects.all().prefetch_related('technologies', 'project_category')
+    categories = ProjectCategory.objects.all()
+    technologies = Technology.objects.all()
+
+    # Server-side filtering (for direct URL access)
+    search_query = request.GET.get('q', '')
+    category_slug = request.GET.get('category', '')
+    tech_slug = request.GET.get('tech', '')
+
+    if search_query:
+        projects = projects.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    if category_slug:
+        projects = projects.filter(project_category__slug=category_slug)
+
+    if tech_slug:
+        projects = projects.filter(technologies__slug=tech_slug)
+
+    projects = projects.distinct()
+
+    context.update({
+        'projects': projects,
+        'categories': categories,
+        'technologies': technologies,
+        'search_query': search_query,
+        'current_category': category_slug,
+        'current_technology': tech_slug,
+    })
+
+    return render(request, 'projects.html', context)
+
+
+# =============================================================================
+# Blog Views
+# =============================================================================
+
+def blog_list(request):
+    """Blog listing page with pagination"""
+    context = get_site_context()
+
+    articles = Article.objects.filter(status='published').prefetch_related('tags')
+    featured_articles = articles.filter(is_featured=True)[:3]
+
+    # Pagination
+    paginator = Paginator(articles, 9)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # All tags for sidebar/filter
+    tags = Tag.objects.all()
+
+    context.update({
+        'articles': page_obj,
+        'featured_articles': featured_articles,
+        'tags': tags,
+        'page_obj': page_obj,
+    })
+
+    return render(request, 'blog/blog_list.html', context)
+
+
+def article_detail(request, slug):
+    """Individual article page"""
+    context = get_site_context()
+
+    article = get_object_or_404(Article, slug=slug, status='published')
+
+    # Related articles (same tags)
+    related_articles = Article.objects.filter(
+        status='published',
+        tags__in=article.tags.all()
+    ).exclude(id=article.id).distinct()[:3]
+
+    context.update({
+        'article': article,
+        'related_articles': related_articles,
+    })
+
+    return render(request, 'blog/article_detail.html', context)
+
+
+def blog_by_tag(request, tag_slug):
+    """Filter articles by tag"""
+    context = get_site_context()
+
+    tag = get_object_or_404(Tag, slug=tag_slug)
+    articles = Article.objects.filter(status='published', tags=tag).prefetch_related('tags')
+
+    paginator = Paginator(articles, 9)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    tags = Tag.objects.all()
+
+    context.update({
+        'articles': page_obj,
+        'current_tag': tag,
+        'tags': tags,
+        'page_obj': page_obj,
+    })
+
+    return render(request, 'blog/blog_list.html', context)
+
+
+# =============================================================================
+# Resume View
+# =============================================================================
+
+def resume(request):
+    """Resume/CV page view"""
+    context = get_site_context()
+
+    resume_settings = ResumeSettings.get_settings()
+    work_experiences = WorkExperience.objects.all()
+    education = Education.objects.all()
+    certifications = Certification.objects.all()
+    skills = Skill.objects.all()
+
+    context.update({
+        'resume_settings': resume_settings,
+        'work_experiences': work_experiences,
+        'education': education,
+        'certifications': certifications,
+        'skills_by_category': {
+            'frontend': skills.filter(category='frontend'),
+            'backend': skills.filter(category='backend'),
+            'devops': skills.filter(category='devops'),
+            'database': skills.filter(category='database'),
+            'other': skills.filter(category='other'),
+        },
+    })
+
+    return render(request, 'resume.html', context)
+
+
+# =============================================================================
+# Tools API
+# =============================================================================
+
+def get_default_tools():
+    """Return default tools data when database is empty"""
+    return [
+        {'name': 'Docker', 'icon_url': '/static/image/tools/docker.png', 'description': 'Container platform for building, shipping, and running applications in isolated environments.', 'category': 'Containerization', 'color': '#2496ED', 'link': ''},
+        {'name': 'Kubernetes', 'icon_url': '/static/image/tools/kubernetes.png', 'description': 'Container orchestration platform for automating deployment, scaling, and management.', 'category': 'Orchestration', 'color': '#326CE5', 'link': ''},
+        {'name': 'Jenkins', 'icon_url': '/static/image/tools/jenkins.png', 'description': 'Open-source automation server for CI/CD pipelines.', 'category': 'CI/CD', 'color': '#D33833', 'link': ''},
+        {'name': 'Terraform', 'icon_url': '/static/image/tools/terraform.png', 'description': 'Infrastructure as Code tool for building cloud infrastructure.', 'category': 'Infrastructure as Code', 'color': '#7B42BC', 'link': ''},
+        {'name': 'AWS', 'icon_url': '/static/image/tools/aws.png', 'description': 'Amazon Web Services - comprehensive cloud computing platform.', 'category': 'Cloud', 'color': '#FF9900', 'link': ''},
+        {'name': 'Azure', 'icon_url': '/static/image/tools/azure.png', 'description': 'Microsoft Azure cloud computing platform and services.', 'category': 'Cloud', 'color': '#0078D4', 'link': ''},
+        {'name': 'Git', 'icon_url': '/static/image/tools/git.png', 'description': 'Distributed version control system for source code.', 'category': 'Version Control', 'color': '#F05032', 'link': ''},
+        {'name': 'GitLab', 'icon_url': '/static/image/tools/gitlab.png', 'description': 'DevOps platform for the complete software development lifecycle.', 'category': 'CI/CD', 'color': '#FC6D26', 'link': ''},
+        {'name': 'Ansible', 'icon_url': '/static/image/tools/ansible.png', 'description': 'Agentless automation tool for configuration management.', 'category': 'Configuration', 'color': '#EE0000', 'link': ''},
+        {'name': 'Prometheus', 'icon_url': '/static/image/tools/prometheus.png', 'description': 'Open-source monitoring and alerting toolkit.', 'category': 'Monitoring', 'color': '#E6522C', 'link': ''},
+        {'name': 'Grafana', 'icon_url': '/static/image/tools/grafana.png', 'description': 'Analytics and interactive visualization platform.', 'category': 'Monitoring', 'color': '#F46800', 'link': ''},
+        {'name': 'Linux', 'icon_url': '/static/image/tools/linux.png', 'description': 'Open-source OS kernel powering most servers.', 'category': 'Operating System', 'color': '#FCC624', 'link': ''},
+        {'name': 'Python', 'icon_url': '/static/image/tools/python.png', 'description': 'Programming language for automation and scripting.', 'category': 'Programming', 'color': '#3776AB', 'link': ''},
+        {'name': 'Nginx', 'icon_url': '/static/image/tools/nginx.png', 'description': 'High-performance web server and reverse proxy.', 'category': 'Web Server', 'color': '#009639', 'link': ''},
+        {'name': 'Helm', 'icon_url': '/static/image/tools/helm.png', 'description': 'Package manager for Kubernetes applications.', 'category': 'Orchestration', 'color': '#0F1689', 'link': ''},
+        {'name': 'Bash', 'icon_url': '/static/image/tools/bash.png', 'description': 'Unix shell and command language for scripting.', 'category': 'Scripting', 'color': '#4EAA25', 'link': ''},
+        {'name': 'Datadog', 'icon_url': '/static/image/tools/datadog.png', 'description': 'Monitoring and analytics platform for cloud apps.', 'category': 'Monitoring', 'color': '#632CA6', 'link': ''},
+        {'name': 'SonarQube', 'icon_url': '/static/image/tools/sonarqube.png', 'description': 'Code quality and security analysis tool.', 'category': 'Security', 'color': '#4E9BCD', 'link': ''},
+        {'name': 'Trivy', 'icon_url': '/static/image/tools/trivy.png', 'description': 'Container vulnerability scanner.', 'category': 'Security', 'color': '#1904DA', 'link': ''},
+        {'name': 'Maven', 'icon_url': '/static/image/tools/mavne.png', 'description': 'Build automation tool for Java projects.', 'category': 'Build', 'color': '#C71A36', 'link': ''},
+        {'name': 'Snyk', 'icon_url': '/static/image/tools/snyk.png', 'description': 'Developer security platform for finding vulnerabilities.', 'category': 'Security', 'color': '#4C4A73', 'link': ''},
+        {'name': 'JFrog', 'icon_url': '/static/image/tools/jfrog.png', 'description': 'Universal artifact repository manager.', 'category': 'Artifacts', 'color': '#40BE46', 'link': ''},
+    ]
+
+
+def tools_api(request):
+    """API endpoint to serve tools data as JSON"""
+    tools = Tool.objects.filter(is_active=True)
+
+    if tools.exists():
+        tools_data = [tool.to_dict() for tool in tools]
+    else:
+        tools_data = get_default_tools()
+
+    return JsonResponse({'tools': tools_data})

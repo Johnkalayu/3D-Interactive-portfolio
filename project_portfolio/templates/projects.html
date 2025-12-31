@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Projects | {{ author }}{% endblock %}
+
+{% block content %}
+<section class="projects-page">
+    <div class="section-header">
+        <h1 class="section-title">Projects</h1>
+        <p class="section-subtitle">Explore my work</p>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="projects-filters">
+        <div class="search-container">
+            <input type="text"
+                   id="project-search"
+                   class="search-input"
+                   placeholder="Search projects..."
+                   value="{{ search_query }}">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+        </div>
+
+        <div class="filter-groups">
+            <div class="filter-group">
+                <label>Category:</label>
+                <select id="category-filter" class="filter-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if current_category == cat.slug %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Technology:</label>
+                <select id="technology-filter" class="filter-select">
+                    <option value="">All Technologies</option>
+                    {% for tech in technologies %}
+                    <option value="{{ tech.slug }}" {% if current_technology == tech.slug %}selected{% endif %}>
+                        {{ tech.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button id="clear-filters" class="btn btn-outline btn-sm">Clear Filters</button>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="projects-grid" id="projects-grid">
+        {% for project in projects %}
+        <div class="project-card"
+             data-category="{{ project.project_category.slug|default:'' }}"
+             data-technologies="{% for t in project.technologies.all %}{{ t.slug }} {% endfor %}"
+             data-title="{{ project.title|lower }}"
+             data-description="{{ project.description|lower }}">
+            <div class="project-image">
+                {% if project.image %}
+                <img src="{{ project.image }}" alt="{{ project.title }}" loading="lazy">
+                {% else %}
+                <div class="project-placeholder">
+                    <span>{{ project.title|slice:":2" }}</span>
+                </div>
+                {% endif %}
+                <div class="project-overlay">
+                    <div class="project-info">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        <span class="project-category">{{ project.get_category_display_name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-details">
+                <p class="project-description">{{ project.description }}</p>
+
+                <div class="project-technologies">
+                    {% for tech in project.technologies.all %}
+                    <span class="tech-badge" data-tech="{{ tech.slug }}">{{ tech.name }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="project-links">
+                    {% if project.live_url %}
+                    <a href="{{ project.live_url }}" target="_blank" class="btn btn-sm btn-primary">
+                        Visit Website
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="7" y1="17" x2="17" y2="7"></line>
+                            <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                    </a>
+                    {% endif %}
+                    {% if project.github_url %}
+                    <a href="{{ project.github_url }}" target="_blank" class="btn btn-sm btn-outline">GitHub</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="no-projects">No projects found. Check back soon!</p>
+        {% endfor %}
+    </div>
+
+    <!-- No Results Message -->
+    <div id="no-results" class="no-results hidden">
+        <p>No projects match your filters.</p>
+        <button id="reset-filters" class="btn btn-outline">Reset Filters</button>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Project Filtering
+(function() {
+    'use strict';
+
+    const searchInput = document.getElementById('project-search');
+    const categoryFilter = document.getElementById('category-filter');
+    const technologyFilter = document.getElementById('technology-filter');
+    const clearBtn = document.getElementById('clear-filters');
+    const resetBtn = document.getElementById('reset-filters');
+    const projectsGrid = document.getElementById('projects-grid');
+    const noResults = document.getElementById('no-results');
+    const projectCards = projectsGrid.querySelectorAll('.project-card');
+
+    let debounceTimer;
+
+    function filterProjects() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const selectedCategory = categoryFilter.value;
+        const selectedTech = technologyFilter.value;
+
+        let visibleCount = 0;
+
+        projectCards.forEach(card => {
+            const title = card.dataset.title || '';
+            const description = card.dataset.description || '';
+            const category = card.dataset.category || '';
+            const technologies = card.dataset.technologies || '';
+
+            const matchesSearch = !searchTerm ||
+                title.includes(searchTerm) ||
+                description.includes(searchTerm);
+            const matchesCategory = !selectedCategory || category === selectedCategory;
+            const matchesTech = !selectedTech || technologies.includes(selectedTech);
+
+            const isVisible = matchesSearch && matchesCategory && matchesTech;
+
+            if (isVisible) {
+                card.style.display = '';
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                requestAnimationFrame(() => {
+                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                });
+                visibleCount++;
+            } else {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    card.style.display = 'none';
+                }, 300);
+            }
+        });
+
+        if (visibleCount === 0) {
+            noResults.classList.remove('hidden');
+        } else {
+            noResults.classList.add('hidden');
+        }
+
+        updateURL();
+    }
+
+    function updateURL() {
+        const params = new URLSearchParams();
+        if (searchInput.value) params.set('q', searchInput.value);
+        if (categoryFilter.value) params.set('category', categoryFilter.value);
+        if (technologyFilter.value) params.set('tech', technologyFilter.value);
+
+        const newURL = params.toString()
+            ? `${window.location.pathname}?${params.toString()}`
+            : window.location.pathname;
+
+        history.replaceState(null, '', newURL);
+    }
+
+    function clearFilters() {
+        searchInput.value = '';
+        categoryFilter.value = '';
+        technologyFilter.value = '';
+        filterProjects();
+    }
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(filterProjects, 300);
+    });
+
+    categoryFilter.addEventListener('change', filterProjects);
+    technologyFilter.addEventListener('change', filterProjects);
+    clearBtn.addEventListener('click', clearFilters);
+    if (resetBtn) resetBtn.addEventListener('click', clearFilters);
+
+    // Initialize from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('q')) searchInput.value = urlParams.get('q');
+    if (urlParams.get('category')) categoryFilter.value = urlParams.get('category');
+    if (urlParams.get('tech')) technologyFilter.value = urlParams.get('tech');
+
+    if (urlParams.toString()) {
+        filterProjects();
+    }
+})();
+</script>
+{% endblock %}

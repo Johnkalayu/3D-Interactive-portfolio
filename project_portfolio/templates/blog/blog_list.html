@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if current_tag %}{{ current_tag.name }} - {% endif %}Blog | {{ author }}{% endblock %}
+
+{% block content %}
+<section class="blog-section">
+    <div class="section-header">
+        <h1 class="section-title">Blog</h1>
+        <p class="section-subtitle">Thoughts on DevOps, Cloud, and Development</p>
+    </div>
+
+    <!-- Tags Filter -->
+    <div class="blog-filters">
+        <a href="{% url 'blog_list' %}" class="tag-filter {% if not current_tag %}active{% endif %}">All</a>
+        {% for tag in tags %}
+        <a href="{% url 'blog_by_tag' tag.slug %}"
+           class="tag-filter {% if current_tag.slug == tag.slug %}active{% endif %}">
+            {{ tag.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Featured Articles (only on first page without tag filter) -->
+    {% if featured_articles and not current_tag and page_obj.number == 1 %}
+    <div class="featured-articles">
+        <h2 class="featured-title">Featured</h2>
+        <div class="featured-grid">
+            {% for article in featured_articles %}
+            <article class="featured-article-card">
+                <div class="article-image">
+                    <img src="{{ article.get_featured_image }}" alt="{{ article.title }}" loading="lazy">
+                </div>
+                <div class="article-content">
+                    <div class="article-meta">
+                        <span class="article-date">{{ article.published_at|date:"M d, Y" }}</span>
+                        <span class="article-reading-time">{{ article.reading_time }} min read</span>
+                    </div>
+                    <h2 class="article-title">{{ article.title }}</h2>
+                    <p class="article-excerpt">{{ article.excerpt }}</p>
+                    <a href="{{ article.get_absolute_url }}" class="btn btn-outline btn-sm">Read More</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if current_tag %}
+    <div class="current-filter">
+        <p>Showing articles tagged with: <strong>{{ current_tag.name }}</strong></p>
+    </div>
+    {% endif %}
+
+    <!-- Article Grid -->
+    <div class="articles-grid">
+        {% for article in articles %}
+        <article class="article-card">
+            <div class="article-image">
+                <img src="{{ article.get_featured_image }}" alt="{{ article.title }}" loading="lazy">
+            </div>
+            <div class="article-content">
+                <div class="article-tags">
+                    {% for tag in article.tags.all %}
+                    <span class="article-tag">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                <h3 class="article-title">
+                    <a href="{{ article.get_absolute_url }}">{{ article.title }}</a>
+                </h3>
+                <p class="article-excerpt">{{ article.excerpt|truncatewords:20 }}</p>
+                <div class="article-meta">
+                    <span class="article-date">{{ article.published_at|date:"M d, Y" }}</span>
+                    <span class="article-reading-time">{{ article.reading_time }} min</span>
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <div class="no-articles">
+            <p>No articles found{% if current_tag %} for this tag{% endif %}.</p>
+            {% if current_tag %}
+            <a href="{% url 'blog_list' %}" class="btn btn-outline">View All Articles</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Previous
+        </a>
+        {% endif %}
+
+        <span class="pagination-info">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="pagination-link">
+            Next
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</section>
+{% endblock %}
