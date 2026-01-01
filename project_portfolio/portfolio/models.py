@@ -332,7 +332,19 @@ class Project(models.Model):
     )
     category = models.CharField(max_length=100, blank=True)  # Keep for backward compat
     description = models.TextField()
-    image = models.URLField(blank=True)
+    image = models.URLField(blank=True, help_text="External image URL (optional)")
+    image_file = models.ImageField(
+        upload_to='projects/images/',
+        blank=True,
+        null=True,
+        help_text="Upload project image directly"
+    )
+    icon_file = models.ImageField(
+        upload_to='projects/icons/',
+        blank=True,
+        null=True,
+        help_text="Upload project icon (recommended: 64x64 or 128x128)"
+    )
     live_url = models.URLField(blank=True)
     github_url = models.URLField(blank=True)
     technologies = models.ManyToManyField(
@@ -361,6 +373,18 @@ class Project(models.Model):
         if self.project_category:
             return self.project_category.name
         return self.category
+
+    def get_image_url(self):
+        """Return image URL - prefers uploaded file over external URL"""
+        if self.image_file:
+            return self.image_file.url
+        return self.image or '/static/image/default-project.png'
+
+    def get_icon_url(self):
+        """Return icon URL if available"""
+        if self.icon_file:
+            return self.icon_file.url
+        return None
 
 
 class ContactMessage(models.Model):

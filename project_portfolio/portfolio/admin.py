@@ -150,12 +150,62 @@ class SkillAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'project_category', 'is_featured', 'order', 'created_at')
+    list_display = ('title', 'project_category', 'image_preview', 'is_featured', 'order', 'created_at')
     list_filter = ('project_category', 'is_featured', 'technologies')
     search_fields = ('title', 'description')
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ('technologies',)
     ordering = ('order', '-created_at')
+    readonly_fields = ('image_preview_large', 'icon_preview_large')
+
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'slug', 'project_category', 'category', 'description')
+        }),
+        ('Images & Icons', {
+            'fields': (
+                ('image_file', 'image_preview_large'),
+                ('icon_file', 'icon_preview_large'),
+                'image',
+            ),
+            'description': 'Upload images directly or provide external URLs. Uploaded files take priority.'
+        }),
+        ('Links', {
+            'fields': ('live_url', 'github_url'),
+            'classes': ('collapse',)
+        }),
+        ('Categorization', {
+            'fields': ('technologies', 'is_featured', 'order')
+        }),
+    )
+
+    def image_preview(self, obj):
+        """Small thumbnail for list display"""
+        from django.utils.html import format_html
+        if obj.image_file:
+            return format_html('<img src="{}" style="max-height: 40px; max-width: 60px; object-fit: cover; border-radius: 4px;"/>', obj.image_file.url)
+        elif obj.image:
+            return format_html('<img src="{}" style="max-height: 40px; max-width: 60px; object-fit: cover; border-radius: 4px;"/>', obj.image)
+        return "-"
+    image_preview.short_description = "Image"
+
+    def image_preview_large(self, obj):
+        """Large preview for edit form"""
+        from django.utils.html import format_html
+        if obj.image_file:
+            return format_html('<img src="{}" style="max-height: 200px; max-width: 300px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px;"/>', obj.image_file.url)
+        elif obj.image:
+            return format_html('<img src="{}" style="max-height: 200px; max-width: 300px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px;"/>', obj.image)
+        return "No image uploaded"
+    image_preview_large.short_description = "Current Image"
+
+    def icon_preview_large(self, obj):
+        """Icon preview for edit form"""
+        from django.utils.html import format_html
+        if obj.icon_file:
+            return format_html('<img src="{}" style="max-height: 128px; max-width: 128px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px; background: #f5f5f5;"/>', obj.icon_file.url)
+        return "No icon uploaded"
+    icon_preview_large.short_description = "Current Icon"
 
 
 @admin.register(ContactMessage)

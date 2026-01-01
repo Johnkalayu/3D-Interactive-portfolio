@@ -60,7 +60,16 @@
              data-category="{{ project.project_category.slug|default:'' }}"
              data-technologies="{% for t in project.technologies.all %}{{ t.slug }} {% endfor %}"
              data-title="{{ project.title|lower }}"
-             data-description="{{ project.description|lower }}">
+             data-description="{{ project.description|lower }}"
+             data-modal-title="{{ project.title }}"
+             data-modal-category="{{ project.get_category_display_name }}"
+             data-long-description="{{ project.long_description|default:project.description }}"
+             data-image="{{ project.image|default:'' }}"
+             data-live-url="{{ project.live_url|default:'' }}"
+             data-github-url="{{ project.github_url|default:'' }}"
+             data-frontend-skills="{% for t in project.technologies.all %}{% if t.category == 'frontend' %}{{ t.name }},{% endif %}{% endfor %}"
+             data-backend-skills="{% for t in project.technologies.all %}{% if t.category == 'backend' %}{{ t.name }},{% endif %}{% endfor %}"
+             data-devops-skills="{% for t in project.technologies.all %}{% if t.category == 'devops' %}{{ t.name }},{% endif %}{% endfor %}">
             <div class="project-image">
                 {% if project.image %}
                 <img src="{{ project.image }}" alt="{{ project.title }}" loading="lazy">
@@ -76,31 +85,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="project-details">
-                <p class="project-description">{{ project.description }}</p>
-
-                <div class="project-technologies">
-                    {% for tech in project.technologies.all %}
-                    <span class="tech-badge" data-tech="{{ tech.slug }}">{{ tech.name }}</span>
-                    {% endfor %}
-                </div>
-
-                <div class="project-links">
-                    {% if project.live_url %}
-                    <a href="{{ project.live_url }}" target="_blank" class="btn btn-sm btn-primary">
-                        Visit Website
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="7" y1="17" x2="17" y2="7"></line>
-                            <polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                    </a>
-                    {% endif %}
-                    {% if project.github_url %}
-                    <a href="{{ project.github_url }}" target="_blank" class="btn btn-sm btn-outline">GitHub</a>
-                    {% endif %}
-                </div>
-            </div>
         </div>
         {% empty %}
         <p class="no-projects">No projects found. Check back soon!</p>
@@ -113,6 +97,58 @@
         <button id="reset-filters" class="btn btn-outline">Reset Filters</button>
     </div>
 </section>
+
+{% endblock %}
+
+{% block modals %}
+<!-- Project Detail Modal -->
+<div class="project-modal-overlay" id="project-modal-overlay">
+    <div class="project-modal" id="project-modal">
+        <button class="project-modal-close" id="project-modal-close" aria-label="Close modal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="project-modal-header">
+            <h2 class="project-modal-title" id="modal-title"></h2>
+            <span class="project-modal-category" id="modal-category"></span>
+        </div>
+
+        <div class="project-modal-body">
+            <div class="project-modal-carousel" id="modal-carousel">
+                <div class="carousel-container">
+                    <div class="carousel-slides" id="carousel-slides"></div>
+                    <button class="carousel-arrow carousel-arrow--prev" id="carousel-prev-btn" aria-label="Previous">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="carousel-arrow carousel-arrow--next" id="carousel-next-btn" aria-label="Next">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <div class="carousel-pagination" id="carousel-pagination"></div>
+            </div>
+
+            <div class="project-modal-tech">
+                <h3 class="tech-section-title">Tech Stack</h3>
+                <div class="tech-categories" id="modal-tech-stack"></div>
+            </div>
+
+            <div class="project-modal-description" id="modal-description"></div>
+        </div>
+
+        <div class="project-modal-footer" id="modal-footer"></div>
+    </div>
+</div>
+
+<div class="image-zoom-overlay" id="image-zoom-overlay">
+    <img src="" alt="Zoomed image" id="zoom-image">
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -220,6 +256,182 @@
     if (urlParams.toString()) {
         filterProjects();
     }
+})();
+
+// Project Modal Handler
+(function() {
+    'use strict';
+
+    const modalOverlay = document.getElementById('project-modal-overlay');
+    const modal = document.getElementById('project-modal');
+    const modalClose = document.getElementById('project-modal-close');
+    const modalTitle = document.getElementById('modal-title');
+    const modalCategory = document.getElementById('modal-category');
+    const modalCarousel = document.getElementById('modal-carousel');
+    const carouselSlides = document.getElementById('carousel-slides');
+    const carouselPagination = document.getElementById('carousel-pagination');
+    const carouselPrevBtn = document.getElementById('carousel-prev-btn');
+    const carouselNextBtn = document.getElementById('carousel-next-btn');
+    const modalTechStack = document.getElementById('modal-tech-stack');
+    const modalDescription = document.getElementById('modal-description');
+    const modalFooter = document.getElementById('modal-footer');
+    const imageZoomOverlay = document.getElementById('image-zoom-overlay');
+    const zoomImage = document.getElementById('zoom-image');
+
+    const projectCards = document.querySelectorAll('.project-card');
+    let currentSlide = 0;
+    let totalSlides = 0;
+
+    projectCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('a')) return;
+            openModal(card.dataset);
+        });
+    });
+
+    function openModal(data) {
+        const title = data.modalTitle || data.title || 'Project';
+        modalTitle.textContent = title;
+        modalCategory.textContent = data.modalCategory || 'Project';
+        setupCarousel(data.image);
+        setupTechStack(data);
+        setupDescription(data.longDescription || data.description, title);
+        setupFooter(data.liveUrl, data.githubUrl);
+        modalOverlay.classList.add('active');
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('active');
+        document.body.classList.remove('modal-open');
+        currentSlide = 0;
+    }
+
+    function setupCarousel(imageUrl) {
+        carouselSlides.innerHTML = '';
+        carouselPagination.innerHTML = '';
+
+        if (imageUrl) {
+            const images = [imageUrl];
+            totalSlides = images.length;
+
+            images.forEach((img, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'carousel-slide';
+                slide.innerHTML = `
+                    <img src="${img}" alt="Screenshot ${index + 1}">
+                    <div class="carousel-slide-overlay"><span>Click to zoom</span></div>
+                `;
+                slide.addEventListener('click', () => openZoom(img));
+                carouselSlides.appendChild(slide);
+
+                const dot = document.createElement('button');
+                dot.className = 'carousel-dot' + (index === 0 ? ' active' : '');
+                dot.addEventListener('click', () => goToSlide(index));
+                carouselPagination.appendChild(dot);
+            });
+
+            modalCarousel.style.display = 'block';
+            updateCarouselArrows();
+        } else {
+            modalCarousel.style.display = 'none';
+        }
+    }
+
+    function goToSlide(index) {
+        currentSlide = index;
+        carouselSlides.style.transform = `translateX(-${currentSlide * 100}%)`;
+        updateCarouselDots();
+        updateCarouselArrows();
+    }
+
+    function nextSlide() { if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1); }
+    function prevSlide() { if (currentSlide > 0) goToSlide(currentSlide - 1); }
+
+    function updateCarouselDots() {
+        carouselPagination.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === currentSlide);
+        });
+    }
+
+    function updateCarouselArrows() {
+        carouselPrevBtn.style.opacity = currentSlide === 0 ? '0.3' : '1';
+        carouselNextBtn.style.opacity = currentSlide >= totalSlides - 1 ? '0.3' : '1';
+    }
+
+    function setupTechStack(data) {
+        modalTechStack.innerHTML = '';
+        const categories = [
+            { label: 'Frontend', skills: data.frontendSkills },
+            { label: 'Backend', skills: data.backendSkills },
+            { label: 'DevOps', skills: data.devopsSkills }
+        ];
+
+        categories.forEach(cat => {
+            if (cat.skills && cat.skills.trim()) {
+                const skills = cat.skills.split(',').filter(s => s.trim());
+                if (skills.length > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'tech-category';
+                    div.innerHTML = `
+                        <div class="tech-pills">
+                            ${skills.map(s => {
+                                const name = s.trim();
+                                const abbr = name.slice(0, 2).toUpperCase();
+                                return `<span class="tech-pill" data-tooltip="${name}">${abbr}</span>`;
+                            }).join('')}
+                        </div>
+                        <div class="tech-category-label">${cat.label}</div>
+                    `;
+                    modalTechStack.appendChild(div);
+                }
+            }
+        });
+
+        modalTechStack.closest('.project-modal-tech').style.display = modalTechStack.children.length > 0 ? 'block' : 'none';
+    }
+
+    function setupDescription(description, title) {
+        if (description) {
+            modalDescription.innerHTML = `<h3>${title || 'About This Project'}</h3><p>${description}</p>`;
+            modalDescription.style.display = 'block';
+        } else {
+            modalDescription.style.display = 'none';
+        }
+    }
+
+    function setupFooter(liveUrl, githubUrl) {
+        modalFooter.innerHTML = '';
+        if (liveUrl) {
+            modalFooter.innerHTML += `<a href="${liveUrl}" target="_blank" class="project-modal-btn project-modal-btn--primary">Visit Website <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>`;
+        }
+        if (githubUrl) {
+            modalFooter.innerHTML += `<a href="${githubUrl}" target="_blank" class="project-modal-btn project-modal-btn--secondary"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> View on GitHub</a>`;
+        }
+    }
+
+    function openZoom(src) {
+        zoomImage.src = src;
+        imageZoomOverlay.classList.add('active');
+    }
+    function closeZoom() {
+        imageZoomOverlay.classList.remove('active');
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+    carouselPrevBtn.addEventListener('click', prevSlide);
+    carouselNextBtn.addEventListener('click', nextSlide);
+    imageZoomOverlay.addEventListener('click', closeZoom);
+
+    document.addEventListener('keydown', (e) => {
+        if (!modalOverlay.classList.contains('active')) return;
+        if (e.key === 'Escape') { imageZoomOverlay.classList.contains('active') ? closeZoom() : closeModal(); }
+        else if (e.key === 'ArrowLeft') prevSlide();
+        else if (e.key === 'ArrowRight') nextSlide();
+    });
+
+    modal.addEventListener('click', (e) => e.stopPropagation());
 })();
 </script>
 {% endblock %}

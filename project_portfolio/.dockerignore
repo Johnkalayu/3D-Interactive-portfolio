@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Environment files
+.env
+.env.*
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Static/Media (will be collected during build)
+staticfiles/
+media/
+
+# Misc
+*.log
+*.bak
+*.tmp
+.DS_Store
+
+# Claude Code
+.claude/
+
+# README (not needed in container)
+README.md

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explore the portfolio of Joni K, a DevOps & Cloud Engineer with 2-years experience in Development, DevOps & Database management.">
-    <meta name="keywords" content="Joni K, Portfolio, DevOps, Development, Database, AI Enthusiast">
-    <meta name="author" content="Joni K">
+    <meta name="description" content="Explore the portfolio of Joni Kalayu, a DevOps & Cloud Engineer with 2-years experience in Development, DevOps & Database management.">
+    <meta name="keywords" content="Joni Kalayu, Portfolio, DevOps, Development, Database, AI Enthusiast">
+    <meta name="author" content="Joni Kalayu">
 
     <title>{% block title %}{{ author }} | DevOps & Cloude Engineering{% endblock %}</title>
 
@@ -46,6 +46,9 @@
     <div class="content-wrapper">
         {% block content %}{% endblock %}
     </div>
+
+    <!-- Modal Container (outside content-wrapper for proper z-index) -->
+    {% block modals %}{% endblock %}
 
     <!-- Footer -->
     <footer class="footer">

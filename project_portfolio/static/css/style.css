@@ -518,10 +518,10 @@ a {
 
 /* Glass Project Cards - Interactive Modal Style */
 .project-card {
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -535,7 +535,7 @@ a {
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
 }
 
 .project-card:hover {
@@ -545,7 +545,7 @@ a {
         0 0 60px rgba(255, 255, 255, 0.35),
         0 0 120px rgba(139, 92, 246, 0.25),
         0 25px 50px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .project-image {
@@ -553,7 +553,7 @@ a {
     aspect-ratio: 16/10;
     overflow: hidden;
     border-radius: 12px;
-    margin: 1rem;
+    margin: 0;
     background: rgba(0, 0, 0, 0.3);
 }
 
@@ -562,7 +562,7 @@ a {
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
-    border-radius: 8px;
+    border-radius: 16px;
 }
 
 .project-card:hover .project-image img {
@@ -587,30 +587,57 @@ a {
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
-    padding: 2.5rem 1.5rem 1.5rem;
-    border-radius: 0 0 8px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 40%, transparent 100%);
+    padding: 3rem 1.25rem 1.25rem;
+    border-radius: 0 0 16px 16px;
+}
+
+/* Hide project info on cards - only show in modal */
+.project-card .project-info {
+    display: none !important;
+}
+
+/* Click hint on project cards */
+.project-card .project-overlay::after {
+    content: 'Click for details';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.project-card:hover .project-overlay::after {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .project-title {
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 600;
     color: #fff;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.01em;
 }
 
 .project-category {
     display: inline-block;
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    padding: 0.35rem 0.9rem;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.3rem 0.75rem;
     border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.65rem;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    backdrop-filter: blur(10px);
+    letter-spacing: 0.04em;
 }
 
 .project-details {
@@ -2161,4 +2188,583 @@ a {
         width: 50px;
         height: 50px;
     }
+}
+
+/* ==========================================================================
+   Interactive Glass Project Modal
+   ========================================================================== */
+
+/* Project Card Enhancements - Clickable Glass Cards */
+.project-card {
+    cursor: pointer;
+    position: relative;
+}
+
+.project-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 70%
+    );
+}
+
+.project-card:hover::after {
+    opacity: 1;
+}
+
+/* Glass Modal Overlay */
+.project-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999 !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    pointer-events: none;
+}
+
+.project-modal-overlay.active {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto;
+}
+
+/* Glass Modal Container */
+.project-modal {
+    background: rgba(12, 12, 18, 0.95) !important;
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    max-width: 680px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow:
+        0 50px 100px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+        0 0 80px rgba(139, 92, 246, 0.15) !important;
+}
+
+.project-modal-overlay.active .project-modal {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Modal scrollbar styling */
+.project-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.project-modal::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.project-modal::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.project-modal::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Modal Close Button */
+.project-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.project-modal-close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.project-modal-close svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Modal Header */
+.project-modal-header {
+    padding: 30px 40px 0;
+    text-align: center;
+    border-bottom: none;
+}
+
+.project-modal-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.project-modal-category {
+    display: none;
+}
+
+/* Modal Body */
+.project-modal-body {
+    padding: 20px 40px 25px;
+}
+
+/* Screenshot Carousel */
+.project-modal-carousel {
+    position: relative;
+    margin-bottom: 25px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.carousel-container {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+}
+
+.carousel-slides {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+}
+
+.carousel-slide {
+    flex: 0 0 100%;
+    position: relative;
+    cursor: pointer;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.carousel-slide:hover img {
+    transform: scale(1.02);
+}
+
+.carousel-slide-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.carousel-slide:hover .carousel-slide-overlay {
+    opacity: 1;
+}
+
+.carousel-slide-overlay span {
+    background: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    transition: all 0.3s ease;
+    z-index: 5;
+}
+
+.carousel-arrow:hover {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.carousel-arrow--prev {
+    left: 15px;
+}
+
+.carousel-arrow--next {
+    right: 15px;
+}
+
+.carousel-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px 0;
+}
+
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-dot.active {
+    background: #fff;
+    transform: scale(1.3);
+}
+
+/* Tech Stack Section */
+.project-modal-tech {
+    margin-bottom: 25px;
+    padding: 25px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tech-section-title {
+    display: none;
+}
+
+.tech-categories {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+}
+
+.tech-category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.tech-category-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    font-weight: 400;
+    order: 2;
+}
+
+.tech-pills {
+    display: flex;
+    gap: 10px;
+    order: 1;
+}
+
+.tech-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+    cursor: default;
+    position: relative;
+    padding: 0;
+    gap: 0;
+}
+
+.tech-pill:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow:
+        0 0 20px rgba(255, 255, 255, 0.6),
+        0 0 60px rgba(255, 255, 255, 0.35),
+        0 0 120px rgba(139, 92, 246, 0.25);
+    transform: translateY(-3px);
+}
+
+/* Tooltip on hover */
+.tech-pill::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.tech-pill:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tech-pill-icon {
+    display: none;
+}
+
+.tech-pill-text {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+/* Project Description */
+.project-modal-description {
+    margin-bottom: 25px;
+}
+
+.project-modal-description h3 {
+    font-size: 1.1rem;
+    color: #fff;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.project-modal-description p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    line-height: 1.8;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.project-modal-description ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.project-modal-description li {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    padding-left: 20px;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.project-modal-description li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+}
+
+/* Modal Footer / Action Buttons */
+.project-modal-footer {
+    padding: 0 40px 35px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.project-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.project-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 15px rgba(255, 255, 255, 0.3),
+        0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+.project-modal-btn--primary {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.project-modal-btn--primary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 15px rgba(255, 255, 255, 0.3),
+        0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+.project-modal-btn--secondary {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.project-modal-btn--secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 15px rgba(255, 255, 255, 0.3),
+        0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+.project-modal-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Image Zoom Modal */
+.image-zoom-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 999999 !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    cursor: zoom-out;
+}
+
+.image-zoom-overlay.active {
+    display: flex !important;
+}
+
+.image-zoom-overlay img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Responsive */
+@media (max-width: 768px) {
+    .project-modal {
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .project-modal-overlay {
+        padding: 0;
+    }
+
+    .project-modal-header,
+    .project-modal-body,
+    .project-modal-footer {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .project-modal-title {
+        font-size: 1.75rem;
+        padding-right: 50px;
+    }
+
+    .project-modal-close {
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .tech-categories {
+        gap: 20px;
+    }
+
+    .tech-category {
+        min-width: 100%;
+    }
+
+    .project-modal-footer {
+        flex-direction: column;
+    }
+
+    .project-modal-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Body scroll lock when modal is open */
+body.modal-open {
+    overflow: hidden;
 }
