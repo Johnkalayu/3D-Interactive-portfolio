@@ -207,11 +207,12 @@ class SkillAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'project_category', 'image_preview', 'is_featured', 'order', 'created_at')
-    list_filter = ('project_category', 'is_featured', 'technologies')
+    list_display = ('title', 'project_category', 'image_preview', 'show_on_homepage', 'is_featured', 'order', 'created_at')
+    list_filter = ('project_category', 'is_featured', 'show_on_homepage', 'technologies')
     search_fields = ('title', 'description')
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ('technologies',)
+    list_editable = ('show_on_homepage', 'is_featured', 'order')
     ordering = ('order', '-created_at')
     readonly_fields = ('image_preview_large', 'icon_preview_large')
 
@@ -231,8 +232,12 @@ class ProjectAdmin(admin.ModelAdmin):
             'fields': ('live_url', 'github_url'),
             'classes': ('collapse',)
         }),
-        ('Categorization', {
-            'fields': ('technologies', 'is_featured', 'order')
+        ('Display Settings', {
+            'fields': ('show_on_homepage', 'is_featured', 'order'),
+            'description': 'Control where and how this project is displayed.'
+        }),
+        ('Technologies', {
+            'fields': ('technologies',)
         }),
     )
 

@@ -1,5 +1,7 @@
 # Joni K Portfolio
 
+![alt text](project_portfolio/static/image/projects/portfolio-preview.png)
+
 A modern, interactive portfolio website built with Django, featuring a stunning 3D DevOps tools visualization, glassmorphism UI design, and smooth animations.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)

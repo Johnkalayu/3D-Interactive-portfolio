@@ -40,8 +40,14 @@ def home(request):
     """Home page view - displays all sections"""
     context = get_site_context()
 
-    # Use default projects (skip database for now)
-    projects = get_default_projects()
+    # Get projects from database that should show on homepage
+    db_projects = Project.objects.filter(show_on_homepage=True).prefetch_related('technologies', 'project_category')
+
+    # If no projects in database, use default projects
+    if db_projects.exists():
+        projects = db_projects
+    else:
+        projects = get_default_projects()
 
     # Get project categories for filtering tabs
     categories = ProjectCategory.objects.all()
@@ -139,11 +145,11 @@ def get_default_projects():
             'title': 'My Portfolio',
             'category': 'Portfolio',
             'description': 'A creative digital playground where creativity meets code. Features beautiful 3D objects, space theme with floating particles, and interactive elements.',
-            'image': '/static/image/projects/portfolio.png',
+            'image': '/static/image/projects/portfolio-preview.png',
             'live_url': '#',
-            'github_url': 'https://github.com/Johnkalayu/portfolio',
-            'frontend_skills': ['Python', 'Django', 'HTML', 'Three.js', 'CSS'],
-            'backend_skills': ['PostgreSQL'],
+            'github_url': 'https://github.com/Johnkalayu/3D-Interactive-portfolio.git',
+            'frontend_skills': [ 'HTML', 'Three.js', 'CSS'],
+            'backend_skills': ['PostgreSQL', 'Python', 'Django'],
         },
         {
             'id': 'smartparkingassitant',

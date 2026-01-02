@@ -394,6 +394,7 @@ class Project(models.Model):
         related_name='projects'
     )
     is_featured = models.BooleanField(default=False)
+    show_on_homepage = models.BooleanField(default=False, help_text="Display this project on the homepage")
     order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
