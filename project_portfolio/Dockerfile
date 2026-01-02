@@ -34,4 +34,6 @@ RUN python manage.py collectstatic --noinput
 USER john
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "project_portfolio.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "project_portfolio.wsgi:application"]
+
+

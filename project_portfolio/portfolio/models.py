@@ -74,6 +74,12 @@ class Article(models.Model):
     content = models.TextField(help_text="Supports Markdown formatting")
     featured_image_url = models.URLField(blank=True,
         help_text="URL for the featured image")
+    featured_image_file = models.ImageField(
+        upload_to='articles/images/',
+        blank=True,
+        null=True,
+        help_text="Upload featured image directly (recommended: 1200x630)"
+    )
 
     tags = models.ManyToManyField(Tag, blank=True, related_name='articles')
 
@@ -103,6 +109,9 @@ class Article(models.Model):
         return reverse('article_detail', kwargs={'slug': self.slug})
 
     def get_featured_image(self):
+        """Return image URL - prefers uploaded file over external URL"""
+        if self.featured_image_file:
+            return self.featured_image_file.url
         return self.featured_image_url or '/static/image/default-article.png'
 
 
@@ -248,6 +257,12 @@ class Skill(models.Model):
     """Model to store skills/technologies"""
     name = models.CharField(max_length=100)
     icon = models.CharField(max_length=100, help_text="Icon class or image path")
+    icon_file = models.ImageField(
+        upload_to='skills/icons/',
+        blank=True,
+        null=True,
+        help_text="Upload skill icon directly (recommended: 64x64 or 128x128 PNG)"
+    )
     category = models.CharField(max_length=50, choices=[
         ('frontend', 'Frontend'),
         ('backend', 'Backend'),
@@ -262,6 +277,20 @@ class Skill(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_icon_url(self):
+        """Return icon URL - prefers uploaded file over icon path"""
+        if self.icon_file:
+            return self.icon_file.url
+        if self.icon and (self.icon.startswith('/') or self.icon.startswith('http')):
+            return self.icon
+        return None
+
+    def get_icon_class(self):
+        """Return icon class if icon field contains a CSS class name"""
+        if self.icon and not self.icon.startswith('/') and not self.icon.startswith('http'):
+            return self.icon
+        return None
 
 
 class Tool(models.Model):
@@ -292,6 +321,12 @@ class Tool(models.Model):
         max_length=255,
         help_text="Static path like /static/image/tools/terraform.png"
     )
+    icon_file = models.ImageField(
+        upload_to='tools/icons/',
+        blank=True,
+        null=True,
+        help_text="Upload tool icon directly (recommended: 128x128 PNG)"
+    )
     color = models.CharField(
         max_length=7,
         default='#6366f1',
@@ -307,13 +342,19 @@ class Tool(models.Model):
     def __str__(self):
         return self.name
 
+    def get_icon_url(self):
+        """Return icon URL - prefers uploaded file over static path"""
+        if self.icon_file:
+            return self.icon_file.url
+        return self.icon_url
+
     def to_dict(self):
         """Convert to dictionary for JSON serialization"""
         return {
             'name': self.name,
             'category': self.get_category_display(),
             'description': self.description,
-            'icon_url': self.icon_url,
+            'icon_url': self.get_icon_url(),
             'color': self.color,
             'link': self.link,
         }

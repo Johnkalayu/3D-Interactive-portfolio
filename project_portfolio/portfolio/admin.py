@@ -46,21 +46,25 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'status', 'is_featured', 'published_at', 'reading_time')
+    list_display = ('title', 'image_preview', 'status', 'is_featured', 'published_at', 'reading_time')
     list_filter = ('status', 'is_featured', 'tags', 'created_at')
     search_fields = ('title', 'content', 'excerpt')
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ('tags',)
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
+    readonly_fields = ('image_preview_large',)
 
     fieldsets = (
         (None, {
             'fields': ('title', 'slug', 'excerpt', 'content')
         }),
-        ('Media', {
-            'fields': ('featured_image_url',),
-            'classes': ('collapse',)
+        ('Featured Image', {
+            'fields': (
+                ('featured_image_file', 'image_preview_large'),
+                'featured_image_url',
+            ),
+            'description': 'Upload an image directly or provide an external URL. Uploaded files take priority.'
         }),
         ('Categorization', {
             'fields': ('tags', 'is_featured')
@@ -71,6 +75,25 @@ class ArticleAdmin(admin.ModelAdmin):
     )
 
     actions = ['publish_articles', 'unpublish_articles']
+
+    def image_preview(self, obj):
+        """Small thumbnail for list display"""
+        from django.utils.html import format_html
+        image_url = obj.get_featured_image()
+        if image_url and image_url != '/static/image/default-article.png':
+            return format_html('<img src="{}" style="max-height: 40px; max-width: 60px; object-fit: cover; border-radius: 4px;"/>', image_url)
+        return "-"
+    image_preview.short_description = "Image"
+
+    def image_preview_large(self, obj):
+        """Large preview for edit form"""
+        from django.utils.html import format_html
+        if obj.featured_image_file:
+            return format_html('<img src="{}" style="max-height: 200px; max-width: 300px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px;"/>', obj.featured_image_file.url)
+        elif obj.featured_image_url:
+            return format_html('<img src="{}" style="max-height: 200px; max-width: 300px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px;"/>', obj.featured_image_url)
+        return "No image uploaded"
+    image_preview_large.short_description = "Current Image"
 
     def publish_articles(self, request, queryset):
         queryset.update(status='published', published_at=timezone.now())
@@ -142,10 +165,44 @@ class TestimonialAdmin(admin.ModelAdmin):
 
 @admin.register(Skill)
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'order')
+    list_display = ('name', 'icon_preview', 'category', 'order')
     list_filter = ('category',)
     search_fields = ('name',)
     ordering = ('order', 'name')
+    list_editable = ('order',)
+    readonly_fields = ('icon_preview_large',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'category', 'order')
+        }),
+        ('Icon', {
+            'fields': (
+                ('icon_file', 'icon_preview_large'),
+                'icon',
+            ),
+            'description': 'Upload an icon directly or provide a CSS class/path. Uploaded files take priority.'
+        }),
+    )
+
+    def icon_preview(self, obj):
+        """Small thumbnail for list display"""
+        from django.utils.html import format_html
+        icon_url = obj.get_icon_url()
+        if icon_url:
+            return format_html('<img src="{}" style="max-height: 32px; max-width: 32px; object-fit: contain;"/>', icon_url)
+        elif obj.get_icon_class():
+            return format_html('<i class="{}"></i>', obj.get_icon_class())
+        return "-"
+    icon_preview.short_description = "Icon"
+
+    def icon_preview_large(self, obj):
+        """Large preview for edit form"""
+        from django.utils.html import format_html
+        if obj.icon_file:
+            return format_html('<img src="{}" style="max-height: 128px; max-width: 128px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px; background: #f5f5f5;"/>', obj.icon_file.url)
+        return "No icon uploaded"
+    icon_preview_large.short_description = "Current Icon"
 
 
 @admin.register(Project)
@@ -234,8 +291,45 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(Tool)
 class ToolAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'is_active', 'order')
+    list_display = ('name', 'icon_preview', 'category', 'is_active', 'order')
     list_filter = ('category', 'is_active')
     search_fields = ('name', 'description')
     list_editable = ('is_active', 'order')
     ordering = ('order', 'name')
+    readonly_fields = ('icon_preview_large',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'category', 'description')
+        }),
+        ('Icon & Appearance', {
+            'fields': (
+                ('icon_file', 'icon_preview_large'),
+                'icon_url',
+                'color',
+            ),
+            'description': 'Upload an icon directly or provide a static path. Uploaded files take priority.'
+        }),
+        ('Settings', {
+            'fields': ('link', 'is_active', 'order')
+        }),
+    )
+
+    def icon_preview(self, obj):
+        """Small thumbnail for list display"""
+        from django.utils.html import format_html
+        icon_url = obj.get_icon_url()
+        if icon_url:
+            return format_html('<img src="{}" style="max-height: 32px; max-width: 32px; object-fit: contain;"/>', icon_url)
+        return "-"
+    icon_preview.short_description = "Icon"
+
+    def icon_preview_large(self, obj):
+        """Large preview for edit form"""
+        from django.utils.html import format_html
+        if obj.icon_file:
+            return format_html('<img src="{}" style="max-height: 128px; max-width: 128px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px; background: #f5f5f5;"/>', obj.icon_file.url)
+        elif obj.icon_url:
+            return format_html('<img src="{}" style="max-height: 128px; max-width: 128px; object-fit: contain; border: 1px solid #ddd; border-radius: 8px; padding: 4px; background: #f5f5f5;"/>', obj.icon_url)
+        return "No icon uploaded"
+    icon_preview_large.short_description = "Current Icon"
