@@ -18,13 +18,11 @@ EXPOSE 5432
 EOF
 
 docker build -t ${IMAGE_NAME} -f ${DOCKERFILE_NAME} .
+docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
-docker run --name ${CONTAINER_NAME} -d --restart unless-stopped \
--e POSTGRES_USER=${DB_USER} \
--e POSTGRES_PASSWORD=${DB_PASSWORD} \
--e POSTGRES_DB=${DB_NAME} \
--e POSTGRES_PORT=${DB_PORT} \
--v $(pwd)/data:/var/lib/postgresql/data \
+docker run --name ${CONTAINER_NAME} -d \
+--env-file .env \
+-v pgdata:/var/lib/postgresql/data \
 -p 5432:5432 \
 --network ${CONTAINER_NETWORK} \
 ${IMAGE_NAME}
